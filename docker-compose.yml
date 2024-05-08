@@ -7,7 +7,7 @@ services:
       - "5432:5432"
     environment:
       - POSTGRES_PASSWORD=123456
-      - POSTGRES_USER=capstone
+      - POSTGRES_USER=postgres
       - POSTGRES_DB=postgres
     volumes:
       - pgdata:/var/lib/postgresql/data

@@ -21,9 +21,9 @@ func NewSampleRepository(db *storage.Database) ISampleRepository {
 }
 
 func (r *SampleRepository) CreateSampleRepository(ctx context.Context, sample *model.Sample) error {
-	_, err := r.storage.NewInsert().Model(sample).Exec(ctx)
-	if err != nil {
-		return err
+	result := r.storage.Create(&sample)
+	if result.Error != nil {
+		return result.Error
 	}
 	return nil
 }
