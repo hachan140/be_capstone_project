@@ -2,10 +2,10 @@ package controller
 
 import (
 	"be-capstone-project/src/cmd/public/apihelper"
-	"be-capstone-project/src/internal/adapter/services"
-	"be-capstone-project/src/internal/core/common"
-	"be-capstone-project/src/internal/core/dtos/request"
-	"be-capstone-project/src/internal/core/logger"
+	"be-capstone-project/src/pkg/adapter/services"
+	"be-capstone-project/src/pkg/core/common"
+	"be-capstone-project/src/pkg/core/dtos/request"
+	"be-capstone-project/src/pkg/core/logger"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
@@ -29,6 +29,11 @@ func (a *AuthController) Signup(ctx *gin.Context) {
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		logger.Error(ctx, "", err)
 		apihelper.AbortErrorHandle(ctx, common.ErrCodeInvalidRequest)
+		return
+	}
+	if err := req.Validate(); err != nil {
+		logger.Error(ctx, "", err)
+		apihelper.AbortErrorHandleCustomMessage(ctx, common.ErrCodeInvalidRequest, err.Error())
 		return
 	}
 	err := a.userService.CreateUser(ctx, &req)

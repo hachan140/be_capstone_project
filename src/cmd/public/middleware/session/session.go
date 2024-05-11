@@ -1,8 +1,8 @@
 package session
 
 import (
-	"be-capstone-project/src/internal/core/common"
-	"be-capstone-project/src/internal/core/web/context"
+	"be-capstone-project/src/pkg/core/common"
+	"be-capstone-project/src/pkg/core/web/context"
 	"github.com/gin-gonic/gin"
 )
 

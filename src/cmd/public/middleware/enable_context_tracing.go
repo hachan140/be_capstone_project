@@ -2,7 +2,7 @@ package middleware
 
 import (
 	"be-capstone-project/src/cmd/public/config"
-	"be-capstone-project/src/internal/core/web/middleware"
+	"be-capstone-project/src/pkg/core/web/middleware"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )

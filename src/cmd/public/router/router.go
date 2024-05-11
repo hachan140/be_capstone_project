@@ -2,7 +2,7 @@ package router
 
 import (
 	"be-capstone-project/src/cmd/public/controller"
-	"be-capstone-project/src/internal/core/logger"
+	"be-capstone-project/src/pkg/core/logger"
 	"github.com/gin-gonic/gin"
 )
 

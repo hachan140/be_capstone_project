@@ -2,10 +2,10 @@ package controller
 
 import (
 	"be-capstone-project/src/cmd/public/apihelper"
-	"be-capstone-project/src/internal/adapter/services"
-	"be-capstone-project/src/internal/core/common"
-	"be-capstone-project/src/internal/core/dtos/request"
-	"be-capstone-project/src/internal/core/logger"
+	"be-capstone-project/src/pkg/adapter/services"
+	"be-capstone-project/src/pkg/core/common"
+	"be-capstone-project/src/pkg/core/dtos/request"
+	"be-capstone-project/src/pkg/core/logger"
 	"fmt"
 	"github.com/gin-gonic/gin"
 )
