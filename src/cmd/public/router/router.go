@@ -10,11 +10,17 @@ import (
 func RegisterGinRouters(
 	in *gin.Engine,
 	sampleController *controller.SampleController,
+	authController *controller.AuthController,
 ) {
 
 	sampleGroup := in.Group("/sample")
 	{
 		sampleGroup.POST("", sampleController.CreateSampleController)
+	}
+	authGroup := in.Group("/auth")
+	{
+		authGroup.POST("/login")
+		authGroup.POST("/signup", authController.Signup)
 	}
 
 	group := in.Group("/test")
