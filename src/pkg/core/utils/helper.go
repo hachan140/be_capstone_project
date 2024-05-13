@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"golang.org/x/crypto/bcrypt"
+	"strings"
 )
 
 func EncodeEvent(event events.Event) ([]byte, error) {
@@ -36,4 +37,11 @@ func EncryptPassword(password string) (string, error) {
 		return "", err
 	}
 	return string(hashesPassword), nil
+}
+
+func IsEmail(emailToCheck string) bool {
+	if strings.Contains(emailToCheck, "@") {
+		return true
+	}
+	return false
 }

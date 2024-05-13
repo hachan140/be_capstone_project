@@ -83,11 +83,13 @@ func GetError(err error) int {
 
 // Error code 400XXX
 const (
-	ErrCodeInvalidRequest = 400001
-	ErrCodeUserNotFound   = 400002
-	ErrCodeInvalidName    = 400003
-	ErrCodeInvalidEmail   = 400004
-	ErrCodeInvalidPhone   = 400005
+	ErrCodeInvalidRequest            = 400001
+	ErrCodeUserNotFound              = 400002
+	ErrCodeInvalidName               = 400003
+	ErrCodeInvalidEmail              = 400004
+	ErrCodeInvalidPhone              = 400005
+	ErrCodeEmailHasAlreadyExisted    = 400006
+	ErrCodeUsernameHasAlreadyExisted = 400007
 )
 
 // Error code 500XXX

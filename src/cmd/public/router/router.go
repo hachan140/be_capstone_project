@@ -19,7 +19,7 @@ func RegisterGinRouters(
 	}
 	authGroup := in.Group("/auth")
 	{
-		authGroup.POST("/login")
+		authGroup.POST("/login", authController.Login)
 		authGroup.POST("/signup", authController.Signup)
 	}
 

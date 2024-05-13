@@ -10,10 +10,11 @@ import (
 
 // Type is the type for config of
 type Config struct {
-	App   common_configs.App
-	Store common_configs.Store
-	Redis common_configs.Redis
-	Kafka common_configs.KafkaSaramaConfig
+	App         common_configs.App
+	Store       common_configs.Store
+	Redis       common_configs.Redis
+	Kafka       common_configs.KafkaSaramaConfig
+	TokenConfig common_configs.TokenConfig
 }
 
 // mustLoadConfig load config from env and file

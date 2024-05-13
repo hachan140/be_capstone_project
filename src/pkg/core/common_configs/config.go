@@ -42,3 +42,9 @@ type KafkaSaramaConfig struct {
 	AuthSDKCertFile    string   `envconfig:"KAFKA_AUTHEN_SDK_CERT_FILE"`
 	AuthSDKKeyFile     string   `envconfig:"KAFKA_AUTHEN_SDK_KEY_FILE"`
 }
+
+type TokenConfig struct {
+	AccessTokenTimeToLive int64  `envconfig:"ACCESS_TOKEN_TTL" default:2592000`
+	AccessTokenPublicKey  string `envconfig:"ACCESS_TOKEN_PUBLIC_KEY" required:"true"`
+	AccessTokenPrivateKey string `envconfig:"ACCESS_TOKEN_PRIVATE_KEY" required:"true"`
+}
