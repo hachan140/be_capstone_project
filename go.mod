@@ -1,6 +1,6 @@
 module be-capstone-project
 
-go 1.22
+go 1.17
 
 require (
 	github.com/Shopify/sarama v1.38.1
