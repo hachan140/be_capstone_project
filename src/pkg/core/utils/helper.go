@@ -32,11 +32,19 @@ func EncodeEvent(event events.Event) ([]byte, error) {
 }
 
 func EncryptPassword(password string) (string, error) {
-	hashesPassword, err := bcrypt.GenerateFromPassword([]byte(password), 8)
+	hashesPassword, err := bcrypt.GenerateFromPassword([]byte(password), 14)
 	if err != nil {
 		return "", err
 	}
 	return string(hashesPassword), nil
+}
+
+func CheckHash(hpass string, pass string) error {
+	err := bcrypt.CompareHashAndPassword([]byte(hpass), []byte(pass))
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func IsEmail(emailToCheck string) bool {

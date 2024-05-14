@@ -9,7 +9,7 @@ import (
 type IUserRepository interface {
 	CreateUser(ctx context.Context, user *model.User) error
 	FindUserByEmail(email string) (*model.User, error)
-	FindUserByUsernameAndPassword(username string, password string) (*model.User, error)
+	FindUserByEmailAndPassword(username string, password string) (*model.User, error)
 }
 
 type UserRepository struct {
@@ -30,16 +30,16 @@ func (u *UserRepository) CreateUser(ctx context.Context, user *model.User) error
 
 func (u *UserRepository) FindUserByEmail(email string) (*model.User, error) {
 	var user *model.User
-	result := u.storage.Where("email = ?", email).Find(&user)
+	result := u.storage.Raw("select * from users u where u.email = ?", email).Scan(&user)
 	if result.Error != nil {
 		return nil, result.Error
 	}
 	return user, nil
 }
 
-func (u *UserRepository) FindUserByUsernameAndPassword(username string, password string) (*model.User, error) {
+func (u *UserRepository) FindUserByEmailAndPassword(email string, password string) (*model.User, error) {
 	var user *model.User
-	result := u.storage.Where("username = ? and password", username, password).Find(&user)
+	result := u.storage.Raw("select * from users where email = ? and password = ?", email, password).Scan(&user)
 	if result.Error != nil {
 		return nil, result.Error
 	}
