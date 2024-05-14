@@ -2,18 +2,13 @@ package redis_repo
 
 import (
 	"be-capstone-project/src/pkg/core/common"
-	"be-capstone-project/src/pkg/core/dtos"
 	"context"
-	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/go-redis/redis/v8"
 	"time"
 )
 
 type IRedisRepository interface {
-	GetApplicationConfig(ctx context.Context, env, channel string) (*dtos.FullApplicationInfo, error)
-	SetApplicationConfig(ctx context.Context, appInfo dtos.FullApplicationInfo, env, channel string) error
 	DeleteApplicationConfig(ctx context.Context, env, channel string)
 	Get(c context.Context, key string) (string, error)
 	Set(ctx context.Context, key string, value interface{}, expiration time.Duration) error
@@ -30,48 +25,6 @@ type IRedisRepository interface {
 
 type RedisRepository struct {
 	client *redis.Client
-}
-
-func NewRedisRepository(client *redis.Client) (IRedisRepository, error) {
-	_, err := client.Ping(context.TODO()).Result()
-	if err != nil {
-		return nil, err
-	}
-	return &RedisRepository{client: client}, nil
-}
-
-func (r RedisRepository) DeleteApplicationConfig(ctx context.Context, env, channel string) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (r RedisRepository) GetApplicationConfig(ctx context.Context, env, channel string) (*dtos.FullApplicationInfo, error) {
-	var app *dtos.FullApplicationInfo
-	res, err := r.client.Get(ctx, fmt.Sprintf(common.ApplicationConfig, env, channel)).Bytes()
-	if err != nil {
-		return nil, err
-	}
-
-	err = json.Unmarshal(res, &app)
-	if err != nil {
-		return nil, err
-	}
-
-	return app, nil
-}
-
-func (r RedisRepository) SetApplicationConfig(ctx context.Context, appInfo dtos.FullApplicationInfo, env, channel string) error {
-	res, err := json.Marshal(appInfo)
-
-	if err != nil {
-		return err
-	}
-
-	res1 := r.client.Set(ctx, fmt.Sprintf(common.ApplicationConfig, env, channel), res, 0)
-	if res1 != nil && res1.Err() != nil {
-		return res1.Err()
-	}
-	return nil
 }
 
 func (r RedisRepository) Set(ctx context.Context, key string, value interface{}, expiration time.Duration) error {
