@@ -2,8 +2,10 @@ package router
 
 import (
 	"be-capstone-project/src/cmd/public/controller"
-	"be-capstone-project/src/pkg/core/logger"
+	"be-capstone-project/src/cmd/public/middleware"
+	"be-capstone-project/src/internal/core/logger"
 	"github.com/gin-gonic/gin"
+	"os"
 )
 
 // RegisterGinRouters All router will register here
@@ -11,16 +13,30 @@ func RegisterGinRouters(
 	in *gin.Engine,
 	sampleController *controller.SampleController,
 	authController *controller.AuthController,
+	organizationController *controller.OrganizationController,
 ) {
+	publicKey := os.Getenv("ACCESS_TOKEN_PUBLIC_KEY")
 
 	sampleGroup := in.Group("/sample")
+	sampleGroup.Use(middleware.ValidateToken(publicKey))
 	{
 		sampleGroup.POST("", sampleController.CreateSampleController)
 	}
+
 	authGroup := in.Group("/auth")
 	{
 		authGroup.POST("/login", authController.Login)
 		authGroup.POST("/signup", authController.Signup)
+	}
+
+	organizationGroup := in.Group("/organization")
+	organizationGroup.Use(middleware.ValidateToken(publicKey))
+	{
+		organizationGroup.POST("", organizationController.CreateOrganization)
+		organizationGroup.GET("")
+		organizationGroup.GET("/:id")
+		organizationGroup.PATCH("/:id")
+		organizationGroup.DELETE("/:id")
 	}
 
 	group := in.Group("/test")

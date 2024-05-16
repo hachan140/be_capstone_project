@@ -1,8 +1,8 @@
 package apihelper
 
 import (
-	"be-capstone-project/src/pkg/core/common"
-	"be-capstone-project/src/pkg/core/web/constant"
+	"be-capstone-project/src/internal/core/common"
+	"be-capstone-project/src/internal/core/web/constant"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"

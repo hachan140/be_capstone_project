@@ -5,12 +5,12 @@ import (
 	"be-capstone-project/src/cmd/public/controller"
 	"be-capstone-project/src/cmd/public/middleware"
 	"be-capstone-project/src/cmd/public/router"
-	"be-capstone-project/src/pkg/adapter/repository/postgres"
-	"be-capstone-project/src/pkg/adapter/services"
-	"be-capstone-project/src/pkg/core/logger"
-	"be-capstone-project/src/pkg/core/storage"
-	"be-capstone-project/src/pkg/core/validator"
-	webserver_http "be-capstone-project/src/pkg/core/web/http"
+	"be-capstone-project/src/internal/adapter/repository/postgres"
+	"be-capstone-project/src/internal/adapter/services"
+	"be-capstone-project/src/internal/core/logger"
+	"be-capstone-project/src/internal/core/storage"
+	"be-capstone-project/src/internal/core/validator"
+	webserver_http "be-capstone-project/src/internal/core/web/http"
 
 	"context"
 	"flag"
@@ -62,14 +62,17 @@ func BootstrapAndRun() {
 	// Adapter
 	sampleRepository := postgres.NewSampleRepository(postgresClient)
 	userRepository := postgres.NewUserRepository(postgresClient)
+	organizationRepositoy := postgres.NewOrganizationRepository(postgresClient)
 
 	// Service layer
 	sampleService := services.NewSampleService(sampleRepository)
 	userService := services.NewUserService(userRepository, *cfg)
+	organizationService := services.NewOrganizationService(organizationRepositoy)
 
 	// Controller layer
 	sampleController := controller.NewSampleController(sampleService)
 	authController := controller.NewAuthController(userService)
+	organizationController := controller.NewOrganizationController(organizationService)
 
 	engine := gin.New()
 	//Register middleware and router
@@ -80,7 +83,7 @@ func BootstrapAndRun() {
 			c.AbortWithStatus(http.StatusInternalServerError)
 		}), // replace default panic handler writer by global logger to make a gentle json output of webserver
 	)
-	router.RegisterGinRouters(engine, &sampleController, &authController)
+	router.RegisterGinRouters(engine, &sampleController, &authController, &organizationController)
 
 	srv := webserver_http.NewHttpServer(engine, cfg)
 

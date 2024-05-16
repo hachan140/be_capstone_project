@@ -1,8 +1,8 @@
 package config
 
 import (
-	"be-capstone-project/src/pkg/core/common_configs"
-	"be-capstone-project/src/pkg/core/logger"
+	"be-capstone-project/src/internal/core/common_configs"
+	"be-capstone-project/src/internal/core/logger"
 	"encoding/json"
 	"github.com/kelseyhightower/envconfig"
 	"io/ioutil"
