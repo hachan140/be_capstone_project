@@ -45,6 +45,7 @@ func (u *UserService) CreateUser(ctx context.Context, req *request.SignUpRequest
 		FirstName: req.FistName,
 		LastName:  req.LastName,
 		Email:     req.Email,
+		Status:    1,
 		Password:  hashedPassword,
 		Gender:    req.Gender,
 		CreatedAt: time.Now(),
@@ -69,40 +70,36 @@ func (u *UserService) LoginByUserEmail(ctx context.Context, req *request.LoginRe
 		return nil, errors.New(common.ErrMessageInvalidPassword)
 	}
 	ttl := time.Duration(u.config.TokenConfig.AccessTokenTimeToLive) * time.Second
-	accessToken, err := u.createToken(ttl, userModel.Email)
+	accessToken, err := u.createToken(ttl, userModel.Email, userModel.ID)
 	if err != nil {
 		return nil, err
 	}
 
-	dat, err := u.validate(accessToken)
-	if err != nil {
-		return nil, err
-	}
-	res := &response.LoginResponse{AccessToken: accessToken, Email: dat}
-	fmt.Println(dat)
+	res := &response.LoginResponse{AccessToken: accessToken}
 	return res, nil
 }
 
-func (u *UserService) createToken(ttl time.Duration, email string) (string, error) {
+func (u *UserService) createToken(ttl time.Duration, email string, userID uint) (string, error) {
 	privateKey := []byte(u.config.TokenConfig.AccessTokenPrivateKey)
 	key, err := jwt.ParseRSAPrivateKeyFromPEM(privateKey)
 	if err != nil {
 		return "", fmt.Errorf("create: parse key: %w", err)
 	}
 	claims := &jwt.MapClaims{
-		"iss":   "issuer",
-		"email": email,
-		"aud":   "audience",
-		"exp":   time.Now().Add(ttl).Unix(),
-		"iat":   time.Now().Unix(),
-		"nbf":   time.Now().Unix(),
+		"iss":     "GeniFast-Search_Go",
+		"email":   email,
+		"user_id": fmt.Sprintf("%v", userID),
+		"aud":     "user_credentials",
+		"exp":     time.Now().Add(ttl).Unix(),
+		"iat":     time.Now().Unix(),
+		"nbf":     time.Now().Unix(),
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
 	tokenString, err := token.SignedString(key)
 	if err != nil {
 		log.Fatalf("Error signing token: %v", err)
 	}
-	return "Bearer " + tokenString, nil
+	return tokenString, nil
 }
 
 func (u *UserService) validate(token string) (interface{}, error) {

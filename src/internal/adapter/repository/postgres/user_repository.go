@@ -10,6 +10,8 @@ type IUserRepository interface {
 	CreateUser(ctx context.Context, user *model.User) error
 	FindUserByEmail(email string) (*model.User, error)
 	FindUserByEmailAndPassword(username string, password string) (*model.User, error)
+	FinduserByID(userID uint) (*model.User, error)
+	UpdateUserOrganizationRole(userID uint, orgID uint, isOrgManager bool) error
 }
 
 type UserRepository struct {
@@ -44,4 +46,21 @@ func (u *UserRepository) FindUserByEmailAndPassword(email string, password strin
 		return nil, result.Error
 	}
 	return user, nil
+}
+
+func (u *UserRepository) FinduserByID(userID uint) (*model.User, error) {
+	var user *model.User
+	result := u.storage.Raw("select * from users u where u.id = ?", userID).Scan(&user)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return user, nil
+}
+
+func (u *UserRepository) UpdateUserOrganizationRole(userID uint, orgID uint, isOrgManager bool) error {
+	err := u.storage.Exec("update users set is_organization_manager = ?, organization_id = ? where id = ?", isOrgManager, orgID, userID).Error
+	if err != nil {
+		return err
+	}
+	return nil
 }
