@@ -37,6 +37,7 @@ func ValidateToken(publicKey string) gin.HandlerFunc {
 			return
 		}
 		c.Set("email", claims["email"])
+		c.Set("user_id", claims["user_id"])
 		c.Next()
 	}
 }

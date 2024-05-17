@@ -2,7 +2,7 @@ package response
 
 type LoginResponse struct {
 	AccessToken string      `json:"access_token"`
-	Email       interface{} `json:"email"`
+	Email       interface{} `json:"email,omitempty"`
 }
 
 type JWTData struct {

@@ -1,6 +1,8 @@
 package common
 
 const (
+	ErrMessageInvalidRequest = "Yêu cầu không hợp lệ"
+
 	ErrMessageInvalidName               = "Tên không hợp lệ"
 	ErrMessageInvalidEmail              = "Email không hợp lệ"
 	ErrMessageInvalidPassword           = "Mật khẩu không hợp lệ"
@@ -10,6 +12,9 @@ const (
 	ErrMessageInvalidUser               = "User không tồn tại"
 
 	//organization
-	ErrMessageOrganizationExisted     = "Tổ chức đã tồn tại"
-	ErrMessageInvalidOrganizationName = "Tên tổ chức không hợp lệ"
+	ErrMessageOrganizationExisted            = "Tổ chức đã tồn tại"
+	ErrMessageInvalidOrganizationName        = "Tên tổ chức không hợp lệ"
+	ErrMessageOrganizationNotExist           = "Tổ chức không tồn tại"
+	ErrMessageCannotAccessToOrganization     = "Không có quyền truy cập vào tổ chức"
+	ErrMessageUserAlreadyInOtherOrganization = "User đã là thành viên của tổ chức khác"
 )

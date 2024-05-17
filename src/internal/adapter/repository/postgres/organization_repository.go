@@ -9,6 +9,7 @@ type IOrganizationRepository interface {
 	CreateOrganization(org *model.Organization) error
 	FindOrganizationByID(ID uint) (*model.Organization, error)
 	FindOrganizationByName(name string) (*model.Organization, error)
+	UpdateOrganization(orgID uint, org *model.Organization) error
 }
 
 type OrganizationRepository struct {
@@ -47,10 +48,13 @@ func (o *OrganizationRepository) FindOrganizationByName(name string) (*model.Org
 	return org, nil
 }
 
-//
-//func (o *OrganizationRepository) UpdateOrganization(org *model.Organization) *model.Organization{
-//
-//}
+func (o *OrganizationRepository) UpdateOrganization(orgID uint, org *model.Organization) error {
+	err := o.storage.Model(org).Where("id = ?", orgID).Updates(org).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
 
 func (o *OrganizationRepository) DeleteOrganizationByID(ID uint) error {
 	err := o.storage.Raw("delete from organizations where id = ?", ID).Error

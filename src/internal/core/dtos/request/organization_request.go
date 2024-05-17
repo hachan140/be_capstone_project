@@ -17,3 +17,17 @@ func (o *CreateOrganizationRequest) Validate() error {
 	}
 	return nil
 }
+
+type UpdateOrganizationRequest struct {
+	Name        *string
+	Description *string
+	Status      *int
+	UpdatedBy   string
+}
+
+func (o *UpdateOrganizationRequest) Validate() error {
+	if *o.Name == "" {
+		return errors.New(common.ErrMessageInvalidOrganizationName)
+	}
+	return nil
+}

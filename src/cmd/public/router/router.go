@@ -33,9 +33,8 @@ func RegisterGinRouters(
 	organizationGroup.Use(middleware.ValidateToken(publicKey))
 	{
 		organizationGroup.POST("", organizationController.CreateOrganization)
-		organizationGroup.GET("")
-		organizationGroup.GET("/:id")
-		organizationGroup.PATCH("/:id")
+		organizationGroup.GET("/:id", organizationController.ViewOrganization)
+		organizationGroup.PATCH("/:id", organizationController.UpdateOrganization)
 		organizationGroup.DELETE("/:id")
 	}
 

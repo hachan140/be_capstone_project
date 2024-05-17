@@ -67,7 +67,7 @@ func BootstrapAndRun() {
 	// Service layer
 	sampleService := services.NewSampleService(sampleRepository)
 	userService := services.NewUserService(userRepository, *cfg)
-	organizationService := services.NewOrganizationService(organizationRepositoy)
+	organizationService := services.NewOrganizationService(organizationRepositoy, userRepository)
 
 	// Controller layer
 	sampleController := controller.NewSampleController(sampleService)
