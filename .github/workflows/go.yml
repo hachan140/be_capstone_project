@@ -10,19 +10,35 @@ on:
     branches: [ "master" ]
 
 jobs:
-
+  # Job 1: build và test
+  # Job thực thi trên máy ảo ubuntu
   build:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-
-    - name: Set up Go
-      uses: actions/setup-go@v4
+    - name: Login to Docker Hub
+      uses: docker/login-action@v2
       with:
-        go-version: '1.20'
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-    - name: Build
-      run: go build -v ./...
+    # - name: Set up Go
+    #   uses: actions/setup-go@v4
+    #   with:
+    #     go-version: '1.20'
 
-    - name: Test
-      run: go test -v ./...
+    - name: Build and test
+      run: |
+        docker build -t be-golang .
+    - name: Push image to Docker Hub
+      uses: docker/build-push-action@v2
+      with:
+        context: .
+        push: true
+        tags: ${{ secrets.DOCKERHUB_USERNAME }}/be-golang:${{ github.sha }}
+
+    # - name: Build
+    #   run: go build -v ./...
+
+    # - name: Test
+    #   run: go test -v ./...
