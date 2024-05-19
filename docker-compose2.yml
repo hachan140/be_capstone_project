@@ -1,0 +1,6 @@
+version: '3.8'
+services:
+  be-golang:
+    image: be_golang:latest
+    ports:
+    - "8080:8080"
