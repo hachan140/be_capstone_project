@@ -22,11 +22,6 @@ jobs:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-    # - name: Set up Go
-    #   uses: actions/setup-go@v4
-    #   with:
-    #     go-version: '1.20'
-
     - name: Build and test
       run: |
         docker build -t be-golang .
@@ -37,8 +32,4 @@ jobs:
         push: true
         tags: ${{ secrets.DOCKERHUB_USERNAME }}/be-golang:${{ github.sha }}
 
-    # - name: Build
-    #   run: go build -v ./...
-
-    # - name: Test
-    #   run: go test -v ./...
+  # Job 2: Deploy
