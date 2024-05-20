@@ -21,15 +21,18 @@ import (
 type IUserService interface {
 	CreateUser(ctx context.Context, req *request.SignUpRequest) error
 	LoginByUserEmail(ctx context.Context, req *request.LoginRequest) (*response.LoginResponse, error)
+	LoginSocial(ctx context.Context, req *request.SocialLoginRequest) (*response.LoginResponse, error)
+	RefreshToken(ctx context.Context, req *request.RefreshTokenRequest) (*response.LoginResponse, error)
 }
 
 type UserService struct {
-	userRepository postgres.IUserRepository
-	config         config.Config
+	userRepository         postgres.IUserRepository
+	refreshTokenRepository postgres.IRefreshTokenRepository
+	config                 config.Config
 }
 
-func NewUserService(userRepository postgres.IUserRepository, config config.Config) IUserService {
-	return &UserService{userRepository: userRepository, config: config}
+func NewUserService(userRepository postgres.IUserRepository, refreshTokenRepo postgres.IRefreshTokenRepository, config config.Config) IUserService {
+	return &UserService{userRepository: userRepository, refreshTokenRepository: refreshTokenRepo, config: config}
 }
 
 func (u *UserService) CreateUser(ctx context.Context, req *request.SignUpRequest) error {
@@ -70,16 +73,104 @@ func (u *UserService) LoginByUserEmail(ctx context.Context, req *request.LoginRe
 		return nil, errors.New(common.ErrMessageInvalidPassword)
 	}
 	ttl := time.Duration(u.config.TokenConfig.AccessTokenTimeToLive) * time.Second
-	accessToken, err := u.createToken(ttl, userModel.Email, userModel.ID)
+	accessToken, err := u.createToken(ttl, userModel.Email, userModel.ID, "user_credentials")
 	if err != nil {
 		return nil, err
 	}
 
-	res := &response.LoginResponse{AccessToken: accessToken}
+	refreshToken, err := u.generateRefreshToken(userModel.ID)
+	if err != nil {
+		return nil, err
+	}
+	res := &response.LoginResponse{
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+	}
 	return res, nil
 }
 
-func (u *UserService) createToken(ttl time.Duration, email string, userID uint) (string, error) {
+func (u *UserService) LoginSocial(ctx context.Context, req *request.SocialLoginRequest) (*response.LoginResponse, error) {
+	var userModel *model.User
+	userModel, err := u.userRepository.FindUserByEmail(req.Email)
+	if err != nil {
+		logger.Error(ctx, "Error when find user email", err)
+		return nil, err
+	}
+	if userModel != nil && !userModel.IsSocial {
+		if !userModel.IsSocial && userModel.Password == "" {
+			return nil, errors.New(common.ErrMessageUserSocialDoesnotExist)
+		}
+		if err := u.userRepository.UpdateUserSocial(userModel.ID); err != nil {
+			return nil, err
+		}
+	}
+	if userModel == nil {
+		userModel = &model.User{
+			FirstName:             req.FirstName,
+			LastName:              req.LastName,
+			Email:                 req.Email,
+			Gender:                false,
+			Status:                1,
+			IsAdmin:               false,
+			IsOrganizationManager: false,
+			IsSocial:              req.IsSocial,
+			CreatedAt:             time.Now(),
+		}
+		err := u.userRepository.CreateUser(ctx, userModel)
+		if err != nil {
+			return nil, err
+		}
+	}
+	ttl := time.Duration(u.config.TokenConfig.AccessTokenTimeToLive) * time.Second
+	accessToken, err := u.createToken(ttl, userModel.Email, userModel.ID, "socials")
+	if err != nil {
+		return nil, err
+	}
+	refreshToken, err := u.generateRefreshToken(userModel.ID)
+	if err != nil {
+		return nil, err
+	}
+	res := &response.LoginResponse{
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+	}
+	return res, nil
+}
+
+func (u *UserService) RefreshToken(ctx context.Context, req *request.RefreshTokenRequest) (*response.LoginResponse, error) {
+	rt, err := u.refreshTokenRepository.FindRefreshTokenByRefreshTokenString(req.RefreshToken)
+	if err != nil {
+		return nil, err
+	}
+	if rt == nil {
+		return nil, errors.New(common.ErrMessageRefreshTokenNotFound)
+	}
+	userModel, err := u.userRepository.FinduserByID(rt.UserID)
+	if err != nil {
+		logger.Error(ctx, "Error when find user email", err)
+		return nil, err
+	}
+	if userModel == nil {
+		return nil, errors.New(common.ErrMessageInvalidUser)
+	}
+	ttl := time.Duration(u.config.TokenConfig.AccessTokenTimeToLive) * time.Second
+	accessToken, err := u.createToken(ttl, userModel.Email, userModel.ID, "user_credentials")
+	if err != nil {
+		return nil, err
+	}
+
+	refreshToken, err := u.generateRefreshToken(userModel.ID)
+	if err != nil {
+		return nil, err
+	}
+	res := &response.LoginResponse{
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+	}
+	return res, nil
+}
+
+func (u *UserService) createToken(ttl time.Duration, email string, userID uint, aud string) (string, error) {
 	privateKey := []byte(u.config.TokenConfig.AccessTokenPrivateKey)
 	key, err := jwt.ParseRSAPrivateKeyFromPEM(privateKey)
 	if err != nil {
@@ -89,7 +180,7 @@ func (u *UserService) createToken(ttl time.Duration, email string, userID uint) 
 		"iss":     "GeniFast-Search_Go",
 		"email":   email,
 		"user_id": fmt.Sprintf("%v", userID),
-		"aud":     "user_credentials",
+		"aud":     aud,
 		"exp":     time.Now().Add(ttl).Unix(),
 		"iat":     time.Now().Unix(),
 		"nbf":     time.Now().Unix(),
@@ -113,4 +204,27 @@ func (u *UserService) validate(token string) (interface{}, error) {
 		return key, nil
 	})
 	return claims["email"], nil
+}
+
+func (u *UserService) generateRefreshToken(userID uint) (string, error) {
+	rt, err := u.refreshTokenRepository.FindRefreshTokenByUserID(userID)
+	if err != nil {
+		return "", err
+	}
+	refreshTokenString := utils.RandomString(128)
+	if rt == nil {
+		rt = &model.RefreshToken{
+			UserID:       userID,
+			RefreshToken: refreshTokenString,
+		}
+		err := u.refreshTokenRepository.CreateRefreshToken(rt)
+		if err != nil {
+			return "", err
+		}
+	} else {
+		if err := u.refreshTokenRepository.UpdateRefreshToken(rt.ID, refreshTokenString); err != nil {
+			return "", err
+		}
+	}
+	return refreshTokenString, nil
 }

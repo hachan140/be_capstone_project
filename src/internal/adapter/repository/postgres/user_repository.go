@@ -12,6 +12,7 @@ type IUserRepository interface {
 	FindUserByEmailAndPassword(username string, password string) (*model.User, error)
 	FinduserByID(userID uint) (*model.User, error)
 	UpdateUserOrganizationRole(userID uint, orgID uint, isOrgManager bool) error
+	UpdateUserSocial(userID uint) error
 }
 
 type UserRepository struct {
@@ -59,6 +60,14 @@ func (u *UserRepository) FinduserByID(userID uint) (*model.User, error) {
 
 func (u *UserRepository) UpdateUserOrganizationRole(userID uint, orgID uint, isOrgManager bool) error {
 	err := u.storage.Exec("update users set is_organization_manager = ?, organization_id = ? where id = ?", isOrgManager, orgID, userID).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (u *UserRepository) UpdateUserSocial(userID uint) error {
+	err := u.storage.Exec("update users set is_social = true where id = ?", userID).Error
 	if err != nil {
 		return err
 	}

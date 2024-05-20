@@ -10,6 +10,8 @@ const (
 	ErrMessageUsernameHasAlreadyExisted = "Username has already existed"
 	ErrMessageInvalidUsername           = "Invalid Username"
 	ErrMessageInvalidUser               = "User không tồn tại"
+	ErrMessageUserSocialDoesnotExist    = "Tài khoản user social không tồn tại"
+	ErrMessageRefreshTokenNotFound      = "Không tìm thấy refresh token của user"
 
 	//organization
 	ErrMessageOrganizationExisted            = "Tổ chức đã tồn tại"

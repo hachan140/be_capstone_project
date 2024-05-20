@@ -6,8 +6,13 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"golang.org/x/crypto/bcrypt"
+	"math/rand"
 	"strings"
+	"time"
 )
+
+const charset = "abcdefghijklmnopqrstuvwxyz" +
+	"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 func EncodeEvent(event events.Event) ([]byte, error) {
 	payload, err := json.Marshal(event.Payload)
@@ -52,4 +57,13 @@ func IsEmail(emailToCheck string) bool {
 		return true
 	}
 	return false
+}
+
+func RandomString(length int) string {
+	rand := rand.New(rand.NewSource(time.Now().UnixNano()))
+	b := make([]byte, length)
+	for i := range b {
+		b[i] = charset[rand.Intn(len(charset))]
+	}
+	return string(b)
 }

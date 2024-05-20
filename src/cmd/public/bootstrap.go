@@ -63,10 +63,11 @@ func BootstrapAndRun() {
 	sampleRepository := postgres.NewSampleRepository(postgresClient)
 	userRepository := postgres.NewUserRepository(postgresClient)
 	organizationRepositoy := postgres.NewOrganizationRepository(postgresClient)
+	refreshTokenRepository := postgres.NewRefreshTokenRepository(postgresClient)
 
 	// Service layer
 	sampleService := services.NewSampleService(sampleRepository)
-	userService := services.NewUserService(userRepository, *cfg)
+	userService := services.NewUserService(userRepository, refreshTokenRepository, *cfg)
 	organizationService := services.NewOrganizationService(organizationRepositoy, userRepository)
 
 	// Controller layer
