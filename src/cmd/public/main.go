@@ -1,11 +1,8 @@
 package main
 
 import (
-	"fmt"
-	"log"
-	"os"
-
 	"github.com/joho/godotenv"
+	"log"
 )
 
 func main() {
@@ -13,8 +10,5 @@ func main() {
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
-
-	fmt.Println("ACCESS_TOKEN_DURATION:", os.Getenv("ACCESS_TOKEN_DURATION"))
-
 	BootstrapAndRun()
 }
