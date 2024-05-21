@@ -1,6 +1,3 @@
-# This workflow will build a golang project
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-go
-
 name: Go
 
 on:
@@ -14,22 +11,27 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
-    - name: Login to Docker Hub
-      uses: docker/login-action@v2
-      with:
-        username: ${{ secrets.DOCKERHUB_USERNAME }}
-        password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - uses: actions/checkout@v4
 
-    - name: Build and test
-      run: |
-        docker build -t be-golang .
-    - name: Push image to Docker Hub
-      uses: docker/build-push-action@v2
-      with:
-        context: .
-        push: true
-        tags: ${{ secrets.DOCKERHUB_USERNAME }}/be-golang:${{ github.sha }}
+      # Bước để tạo file .env từ GitHub Secrets
+      - name: Create .env file
+        run: echo "${{ secrets.ENV_FILE }}" > .env
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and test
+        run: |
+          docker build -t be-golang .
+      - name: Push image to Docker Hub
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/be-golang:${{ github.sha }}
 
   # Job 2: Deploy
   deploy:
@@ -37,16 +39,19 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Deploy to server
-      uses: appleboy/ssh-action@v0.1.3
-      with:
-        host: ${{ secrets.SERVER_HOST }}
-        username: ${{ secrets.SERVER_USER }}
-        key: ${{ secrets.SSH_PRIVATE_KEY }}
-        script: |
-          docker pull ${{ secrets.DOCKERHUB_USERNAME }}/be-golang:${{ github.sha }}
-          # Dừng và gỡ bỏ container hiện tại (nếu có)
-          docker stop be-golang-container
-          docker rm be-golang-container
-          # Chạy container mới với image đã pull về bên trên
-          docker run -d -p 8080:8080 --name be-golang-container ${{ secrets.DOCKERHUB_USERNAME }}/be-golang:${{ github.sha }}
+      - name: Deploy to server
+        uses: appleboy/ssh-action@v0.1.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            # Bước để tạo file .env từ GitHub Secrets
+            echo "${{ secrets.ENV_FILE }}" > .env
+            
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/be-golang:${{ github.sha }}
+            # Dừng và gỡ bỏ container hiện tại (nếu có)
+            docker stop be-golang-container
+            docker rm be-golang-container
+            # Chạy container mới với image đã pull về bên trên
+            docker run -d -p 8080:8080 --name be-golang-container ${{ secrets.DOCKERHUB_USERNAME }}/be-golang:${{ github.sha }}
