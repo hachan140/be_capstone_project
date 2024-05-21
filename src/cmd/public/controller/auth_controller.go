@@ -62,3 +62,47 @@ func (a *AuthController) Login(ctx *gin.Context) {
 	}
 	apihelper.SuccessfulHandle(ctx, res)
 }
+
+func (a *AuthController) SocialLogin(ctx *gin.Context) {
+	tag := "[LoginSocialController] "
+	var req request.SocialLoginRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		logger.Error(ctx, tag, err)
+		apihelper.AbortErrorHandle(ctx, common.ErrCodeInvalidRequest)
+		return
+	}
+	if err := req.Validate(); err != nil {
+		logger.Error(ctx, tag, err)
+		apihelper.AbortErrorHandleCustomMessage(ctx, common.ErrCodeInvalidRequest, err.Error())
+		return
+	}
+	res, err := a.userService.LoginSocial(ctx, &req)
+	if err != nil {
+		logger.ErrorCtx(ctx, tag+"Failed to login social with error: %v", err)
+		apihelper.AbortErrorHandleCustomMessage(ctx, http.StatusInternalServerError, err.Error())
+		return
+	}
+	apihelper.SuccessfulHandle(ctx, res)
+}
+
+func (a *AuthController) RefreshToken(ctx *gin.Context) {
+	tag := "[LoginController] "
+	var req request.RefreshTokenRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		logger.Error(ctx, tag, err)
+		apihelper.AbortErrorHandle(ctx, common.ErrCodeInvalidRequest)
+		return
+	}
+	if err := req.Validate(); err != nil {
+		logger.Error(ctx, tag, err)
+		apihelper.AbortErrorHandleCustomMessage(ctx, common.ErrCodeInvalidRequest, err.Error())
+		return
+	}
+	res, err := a.userService.RefreshToken(ctx, &req)
+	if err != nil {
+		logger.ErrorCtx(ctx, tag+"Failed to login social with error: %v", err)
+		apihelper.AbortErrorHandleCustomMessage(ctx, http.StatusInternalServerError, err.Error())
+		return
+	}
+	apihelper.SuccessfulHandle(ctx, res)
+}

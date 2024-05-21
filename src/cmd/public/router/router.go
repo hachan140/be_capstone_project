@@ -27,6 +27,8 @@ func RegisterGinRouters(
 	{
 		authGroup.POST("/login", authController.Login)
 		authGroup.POST("/signup", authController.Signup)
+		authGroup.POST("/social-login", authController.SocialLogin)
+		authGroup.POST("/refresh-token", authController.RefreshToken)
 	}
 
 	organizationGroup := in.Group("/organization")

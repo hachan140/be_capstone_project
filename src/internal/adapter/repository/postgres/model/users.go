@@ -13,6 +13,7 @@ type User struct {
 	IsAdmin               bool
 	IsOrganizationManager bool
 	OrganizationID        uint
+	IsSocial              bool
 	CreatedAt             time.Time
 	UpdatedAt             time.Time
 }
