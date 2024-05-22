@@ -14,6 +14,7 @@ func RegisterGinRouters(
 	sampleController *controller.SampleController,
 	authController *controller.AuthController,
 	organizationController *controller.OrganizationController,
+	categoryController *controller.CategoryController,
 ) {
 	publicKey := os.Getenv("ACCESS_TOKEN_PUBLIC_KEY")
 
@@ -37,9 +38,16 @@ func RegisterGinRouters(
 		organizationGroup.POST("", organizationController.CreateOrganization)
 		organizationGroup.GET("/:id", organizationController.ViewOrganization)
 		organizationGroup.PATCH("/:id", organizationController.UpdateOrganization)
-		organizationGroup.DELETE("/:id")
 	}
 
+	categoryGroup := in.Group("/category")
+	categoryGroup.Use(middleware.ValidateToken(publicKey))
+	{
+		categoryGroup.POST("", categoryController.CreateCategory)
+		categoryGroup.GET("/:id", categoryController.ViewCategoryByID)
+		categoryGroup.PATCH("/:id", categoryController.UpdateCategory)
+		categoryGroup.GET("/organization/:id", categoryController.ViewListCategoryByOrganization)
+	}
 	group := in.Group("/test")
 	{
 		group.GET("", func(context *gin.Context) {

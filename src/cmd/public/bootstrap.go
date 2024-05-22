@@ -11,6 +11,7 @@ import (
 	"be-capstone-project/src/internal/core/storage"
 	"be-capstone-project/src/internal/core/validator"
 	webserver_http "be-capstone-project/src/internal/core/web/http"
+	"github.com/gin-contrib/cors"
 
 	"context"
 	"flag"
@@ -64,16 +65,19 @@ func BootstrapAndRun() {
 	userRepository := postgres.NewUserRepository(postgresClient)
 	organizationRepositoy := postgres.NewOrganizationRepository(postgresClient)
 	refreshTokenRepository := postgres.NewRefreshTokenRepository(postgresClient)
+	categoryRepository := postgres.NewCategoryRepository(postgresClient)
 
 	// Service layer
 	sampleService := services.NewSampleService(sampleRepository)
 	userService := services.NewUserService(userRepository, refreshTokenRepository, *cfg)
 	organizationService := services.NewOrganizationService(organizationRepositoy, userRepository)
+	categoryService := services.NewCategoryService(categoryRepository, userRepository)
 
 	// Controller layer
 	sampleController := controller.NewSampleController(sampleService)
 	authController := controller.NewAuthController(userService)
 	organizationController := controller.NewOrganizationController(organizationService)
+	categoryController := controller.NewCategoryController(categoryService)
 
 	engine := gin.New()
 	//Register middleware and router
@@ -84,7 +88,17 @@ func BootstrapAndRun() {
 			c.AbortWithStatus(http.StatusInternalServerError)
 		}), // replace default panic handler writer by global logger to make a gentle json output of webserver
 	)
-	router.RegisterGinRouters(engine, &sampleController, &authController, &organizationController)
+
+	configCors := cors.DefaultConfig()
+	configCors.AllowAllOrigins = true
+	configCors.AllowMethods = []string{"POST", "GET", "PUT", "PATCH", "DELETE", "OPTIONS"}
+	configCors.AllowHeaders = []string{"Origin", "Content-Type", "Authorization", "Accept", "User-Agent", "Cache-Control", "Pragma"}
+	configCors.ExposeHeaders = []string{"Content-Length"}
+	configCors.AllowCredentials = true
+	configCors.MaxAge = 12 * time.Hour
+	engine.Use(cors.New(configCors))
+
+	router.RegisterGinRouters(engine, &sampleController, &authController, &organizationController, &categoryController)
 
 	srv := webserver_http.NewHttpServer(engine, cfg)
 

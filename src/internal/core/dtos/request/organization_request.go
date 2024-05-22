@@ -29,5 +29,10 @@ func (o *UpdateOrganizationRequest) Validate() error {
 	if *o.Name == "" {
 		return errors.New(common.ErrMessageInvalidOrganizationName)
 	}
+	if o.Status != nil {
+		if *o.Status != 0 || *o.Status != 1 {
+			return errors.New(common.ErrMessageInvalidStatus)
+		}
+	}
 	return nil
 }
