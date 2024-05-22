@@ -15,6 +15,7 @@ type IOrganizationService interface {
 	CreateOrganization(userId uint, req *request.CreateOrganizationRequest) error
 	UpdateOrganization(orgID uint, userID uint, req *request.UpdateOrganizationRequest) error
 	FindOrganizationByID(orgID uint, userID uint) (*dtos.Organization, error)
+	CheckUserRoleInOrganization(orgID uint, userID uint) (bool, error)
 }
 
 type OrganizationService struct {
@@ -68,7 +69,7 @@ func (o *OrganizationService) UpdateOrganization(orgID uint, userID uint, req *r
 	if org == nil {
 		return errors.New(common.ErrMessageOrganizationNotExist)
 	}
-	isOrganizationManager, err := o.checkUserRoleInOrganization(orgID, userID)
+	isOrganizationManager, err := o.CheckUserRoleInOrganization(orgID, userID)
 	if !isOrganizationManager || err != nil {
 		return errors.New(common.ErrMessageCannotAccessToOrganization)
 	}
@@ -117,7 +118,7 @@ func (o *OrganizationService) buildOrganizationUpdateQuery(orgExist *model.Organ
 }
 
 func (o *OrganizationService) FindOrganizationByID(orgID uint, userID uint) (*dtos.Organization, error) {
-	_, err := o.checkUserRoleInOrganization(orgID, userID)
+	_, err := o.CheckUserRoleInOrganization(orgID, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -132,7 +133,7 @@ func (o *OrganizationService) FindOrganizationByID(orgID uint, userID uint) (*dt
 	return orgDTO, nil
 }
 
-func (o *OrganizationService) checkUserRoleInOrganization(orgID uint, userID uint) (bool, error) {
+func (o *OrganizationService) CheckUserRoleInOrganization(orgID uint, userID uint) (bool, error) {
 	user, err := o.userRepository.FinduserByID(userID)
 	if err != nil {
 		return false, err
