@@ -11,6 +11,7 @@ import (
 	"be-capstone-project/src/internal/core/storage"
 	"be-capstone-project/src/internal/core/validator"
 	webserver_http "be-capstone-project/src/internal/core/web/http"
+	"github.com/gin-contrib/cors"
 
 	"context"
 	"flag"
@@ -87,6 +88,16 @@ func BootstrapAndRun() {
 			c.AbortWithStatus(http.StatusInternalServerError)
 		}), // replace default panic handler writer by global logger to make a gentle json output of webserver
 	)
+
+	configCors := cors.DefaultConfig()
+	configCors.AllowAllOrigins = true
+	configCors.AllowMethods = []string{"POST", "GET", "PUT", "PATCH", "DELETE", "OPTIONS"}
+	configCors.AllowHeaders = []string{"Origin", "Content-Type", "Authorization", "Accept", "User-Agent", "Cache-Control", "Pragma"}
+	configCors.ExposeHeaders = []string{"Content-Length"}
+	configCors.AllowCredentials = true
+	configCors.MaxAge = 12 * time.Hour
+	engine.Use(cors.New(configCors))
+
 	router.RegisterGinRouters(engine, &sampleController, &authController, &organizationController, &categoryController)
 
 	srv := webserver_http.NewHttpServer(engine, cfg)
