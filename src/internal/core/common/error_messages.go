@@ -19,4 +19,10 @@ const (
 	ErrMessageOrganizationNotExist           = "Tổ chức không tồn tại"
 	ErrMessageCannotAccessToOrganization     = "Không có quyền truy cập vào tổ chức"
 	ErrMessageUserAlreadyInOtherOrganization = "User đã là thành viên của tổ chức khác"
+
+	//category
+	ErrMessageCategoryNotFound    = "Thư mục không tồn tại"
+	ErrMessageCategoryExisted     = "Thư mục đã tồn tại"
+	ErrMessageInvalidCategoryName = "Tên thư mục không được trống"
+	ErrMessageInvalidStatus       = "Trạng thái không hợp lệ"
 )

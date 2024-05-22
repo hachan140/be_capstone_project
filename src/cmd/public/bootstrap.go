@@ -64,16 +64,19 @@ func BootstrapAndRun() {
 	userRepository := postgres.NewUserRepository(postgresClient)
 	organizationRepositoy := postgres.NewOrganizationRepository(postgresClient)
 	refreshTokenRepository := postgres.NewRefreshTokenRepository(postgresClient)
+	categoryRepository := postgres.NewCategoryRepository(postgresClient)
 
 	// Service layer
 	sampleService := services.NewSampleService(sampleRepository)
 	userService := services.NewUserService(userRepository, refreshTokenRepository, *cfg)
 	organizationService := services.NewOrganizationService(organizationRepositoy, userRepository)
+	categoryService := services.NewCategoryService(categoryRepository, userRepository)
 
 	// Controller layer
 	sampleController := controller.NewSampleController(sampleService)
 	authController := controller.NewAuthController(userService)
 	organizationController := controller.NewOrganizationController(organizationService)
+	categoryController := controller.NewCategoryController(categoryService)
 
 	engine := gin.New()
 	//Register middleware and router
@@ -84,7 +87,7 @@ func BootstrapAndRun() {
 			c.AbortWithStatus(http.StatusInternalServerError)
 		}), // replace default panic handler writer by global logger to make a gentle json output of webserver
 	)
-	router.RegisterGinRouters(engine, &sampleController, &authController, &organizationController)
+	router.RegisterGinRouters(engine, &sampleController, &authController, &organizationController, &categoryController)
 
 	srv := webserver_http.NewHttpServer(engine, cfg)
 
