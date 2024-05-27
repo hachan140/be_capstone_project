@@ -50,14 +50,15 @@ func (o *OrganizationService) CreateOrganization(userId uint, req *request.Creat
 		Description: req.Description,
 		CreatedAt:   time.Now(),
 		CreatedBy:   req.CreatedBy,
+		Status:      3,
 	}
 	if err := o.organizationRepository.CreateOrganization(orgModel); err != nil {
 		return err
 	}
-	err = o.userRepository.UpdateUserOrganizationRole(userId, orgModel.ID, true)
-	if err != nil {
-		return err
-	}
+	/*	err = o.userRepository.UpdateUserOrganizationRole(userId, orgModel.ID, true)
+		if err != nil {
+			return err
+		}*/
 	return nil
 }
 
