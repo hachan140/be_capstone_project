@@ -48,3 +48,9 @@ type TokenConfig struct {
 	AccessTokenPublicKey  string `envconfig:"ACCESS_TOKEN_PUBLIC_KEY" required:"true"`
 	AccessTokenPrivateKey string `envconfig:"ACCESS_TOKEN_PRIVATE_KEY" required:"true"`
 }
+
+type EmailConfig struct {
+	AcceptURL      string `envconfig:"ACCEPT_URL"`
+	SenderEmail    string `envconfig:"SENDER_EMAIL"`
+	SenderPassword string `envconfig:"SENDER_PASSWORD"`
+}

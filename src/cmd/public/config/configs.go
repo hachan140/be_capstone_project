@@ -15,6 +15,7 @@ type Config struct {
 	Redis       common_configs.Redis
 	Kafka       common_configs.KafkaSaramaConfig
 	TokenConfig common_configs.TokenConfig
+	EmailConfig common_configs.EmailConfig
 }
 
 // mustLoadConfig load config from env and file

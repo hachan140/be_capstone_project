@@ -70,7 +70,7 @@ func BootstrapAndRun() {
 	// Service layer
 	sampleService := services.NewSampleService(sampleRepository)
 	userService := services.NewUserService(userRepository, refreshTokenRepository, *cfg)
-	organizationService := services.NewOrganizationService(organizationRepositoy, userRepository)
+	organizationService := services.NewOrganizationService(organizationRepositoy, userRepository, cfg.EmailConfig)
 	categoryService := services.NewCategoryService(categoryRepository, userRepository)
 
 	// Controller layer

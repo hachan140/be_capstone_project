@@ -38,6 +38,7 @@ func RegisterGinRouters(
 		organizationGroup.POST("", organizationController.CreateOrganization)
 		organizationGroup.GET("/:id", organizationController.ViewOrganization)
 		organizationGroup.PATCH("/:id", organizationController.UpdateOrganization)
+		organizationGroup.POST("/:id/add-people", organizationController.AddPeopleToOrganization)
 	}
 
 	categoryGroup := in.Group("/category")

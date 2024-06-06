@@ -33,6 +33,14 @@ type ErrorResponse struct {
 	CustomMsgParam *[]interface{}
 }
 
+// ErrorCodeMessage error response struct
+
+type ErrorCodeMessage struct {
+	HTTPCode    int
+	ServiceCode int
+	Message     string
+}
+
 func MakeCustomErrorResponse(httpCode int, serviceCode int, msgParams ...interface{}) *ErrorResponse {
 	return &ErrorResponse{
 		HTTPCode:       httpCode,
@@ -83,13 +91,39 @@ func GetError(err error) int {
 
 // Error code 400XXX
 const (
-	ErrCodeInvalidRequest            = 400001
+	ErrCodeInvalidRequest = 400001
+
+	//authentication
 	ErrCodeUserNotFound              = 400002
 	ErrCodeInvalidName               = 400003
 	ErrCodeInvalidEmail              = 400004
 	ErrCodeInvalidPhone              = 400005
 	ErrCodeEmailHasAlreadyExisted    = 400006
 	ErrCodeUsernameHasAlreadyExisted = 400007
+	ErrCodeEmailExisted              = 400009
+	ErrCodeInvalidUsername           = 400010
+	ErrCodeInvalidUser               = 400011
+	ErrCodeUserSocialDoesNotExist    = 400012
+	ErrCodeRefreshTokenNotFound      = 400013
+
+	//organization
+	ErrCodeOrganizationExisted            = 400014
+	ErrCodeInvalidOrganizationName        = 400015
+	ErrCodeOrganizationNotExist           = 400016
+	ErrCodeCannotAccessToOrganization     = 400017
+	ErrCodeUserAlreadyInOtherOrganization = 400018
+
+	//category
+	ErrCodeCategoryNotFound          = 400019
+	ErrCodeCategoryExisted           = 400020
+	ErrCodeInvalidCategoryName       = 400021
+	ErrCodeInvalidStatus             = 400022
+	ErrCodeUserDoesNotHavePermission = 400023
+)
+
+// Error code 401XXX
+const (
+	ErrCodeInvalidPassword = 401001
 )
 
 // Error code 500XXX
