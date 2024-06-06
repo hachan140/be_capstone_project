@@ -100,7 +100,6 @@ func (o *OrganizationController) ViewOrganization(ctx *gin.Context) {
 	}
 	userIDRaw, _ := ctx.Get("user_id")
 	userID, _ := strconv.ParseUint(userIDRaw.(string), 10, 32)
-
 	res, err := o.organizationService.FindOrganizationByID(uint(orgID), uint(userID))
 	if err != nil {
 		logger.ErrorCtx(ctx, tag+"Failed to create sample with error: %v", err)
@@ -109,4 +108,33 @@ func (o *OrganizationController) ViewOrganization(ctx *gin.Context) {
 	}
 	apihelper.SuccessfulHandle(ctx, res)
 	return
+}
+
+func (o *OrganizationController) AddPeopleToOrganization(ctx *gin.Context) {
+	tag := "[AddPeopleToOrganizationController] "
+	orgIDRaw := ctx.Param("id")
+	orgID, err := strconv.ParseUint(orgIDRaw, 10, 32)
+	if err != nil {
+		logger.Error(ctx, tag, err)
+		apihelper.AbortErrorHandle(ctx, common.ErrCodeInvalidRequest)
+		return
+	}
+	userIDRaw, _ := ctx.Get("user_id")
+	userID, _ := strconv.ParseUint(userIDRaw.(string), 10, 32)
+	var req request.AddPeopleToOrganizationRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		logger.Error(ctx, tag, err)
+		apihelper.AbortErrorHandle(ctx, common.ErrCodeInvalidRequest)
+		return
+	}
+	validEmails, _, errRes := o.organizationService.AddPeopleToOrganization(uint(orgID), uint(userID), req.Emails)
+	if errRes != nil {
+		logger.Error(ctx, tag, err)
+		apihelper.AbortErrorHandle(ctx, errRes.ServiceCode)
+		return
+	}
+	res := map[string][]string{
+		"valid_email": validEmails,
+	}
+	apihelper.SuccessfulHandle(ctx, res)
 }

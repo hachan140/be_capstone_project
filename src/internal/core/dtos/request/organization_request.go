@@ -36,3 +36,7 @@ func (o *UpdateOrganizationRequest) Validate() error {
 	}
 	return nil
 }
+
+type AddPeopleToOrganizationRequest struct {
+	Emails []*string `json:"emails"`
+}

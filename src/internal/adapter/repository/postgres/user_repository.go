@@ -13,6 +13,8 @@ type IUserRepository interface {
 	FinduserByID(userID uint) (*model.User, error)
 	UpdateUserOrganizationRole(userID uint, orgID uint, isOrgManager bool) error
 	UpdateUserSocial(userID uint) error
+	FindUsersInOrganization(emails []*string) ([]string, error)
+	FindUsersNotInOrganization(emails []*string) ([]string, error)
 }
 
 type UserRepository struct {
@@ -58,6 +60,25 @@ func (u *UserRepository) FinduserByID(userID uint) (*model.User, error) {
 	return user, nil
 }
 
+func (u *UserRepository) FindUsersInOrganization(emails []*string) ([]string, error) {
+	var emailExisted []string
+	result := u.storage.Raw("select email from users u where email in ? and organization_id != 0", emails).Scan(&emailExisted)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return emailExisted, nil
+}
+
+func (u *UserRepository) FindUsersNotInOrganization(emails []*string) ([]string, error) {
+	var emailNotExisted []string
+	result := u.storage.Raw("select email from users u where email in ? and organization_id = 0", emails).Scan(&emailNotExisted)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return emailNotExisted, nil
+
+}
+
 func (u *UserRepository) UpdateUserOrganizationRole(userID uint, orgID uint, isOrgManager bool) error {
 	err := u.storage.Exec("update users set is_organization_manager = ?, organization_id = ? where id = ?", isOrgManager, orgID, userID).Error
 	if err != nil {
@@ -72,4 +93,5 @@ func (u *UserRepository) UpdateUserSocial(userID uint) error {
 		return err
 	}
 	return nil
+
 }

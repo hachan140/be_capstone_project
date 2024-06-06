@@ -5,9 +5,13 @@ import (
 	"be-capstone-project/src/internal/adapter/repository/postgres"
 	"be-capstone-project/src/internal/adapter/repository/postgres/model"
 	"be-capstone-project/src/internal/core/common"
+	"be-capstone-project/src/internal/core/common_configs"
 	"be-capstone-project/src/internal/core/dtos"
 	"be-capstone-project/src/internal/core/dtos/request"
+	"be-capstone-project/src/internal/core/utils"
 	"errors"
+	_ "gopkg.in/gomail.v2"
+	"net/http"
 	"time"
 )
 
@@ -16,17 +20,20 @@ type IOrganizationService interface {
 	UpdateOrganization(orgID uint, userID uint, req *request.UpdateOrganizationRequest) error
 	FindOrganizationByID(orgID uint, userID uint) (*dtos.Organization, error)
 	CheckUserRoleInOrganization(orgID uint, userID uint) (bool, error)
+	AddPeopleToOrganization(orgID uint, userID uint, emails []*string) ([]string, *common.ErrorCodeMessage)
 }
 
 type OrganizationService struct {
 	organizationRepository postgres.IOrganizationRepository
 	userRepository         postgres.IUserRepository
+	emailConfig            common_configs.EmailConfig
 }
 
-func NewOrganizationService(orgRepo postgres.IOrganizationRepository, userRepository postgres.IUserRepository) IOrganizationService {
+func NewOrganizationService(orgRepo postgres.IOrganizationRepository, userRepository postgres.IUserRepository, emailConfig common_configs.EmailConfig) IOrganizationService {
 	return &OrganizationService{
 		organizationRepository: orgRepo,
 		userRepository:         userRepository,
+		emailConfig:            emailConfig,
 	}
 }
 
@@ -134,6 +141,49 @@ func (o *OrganizationService) FindOrganizationByID(orgID uint, userID uint) (*dt
 	return orgDTO, nil
 }
 
+func (o *OrganizationService) AddPeopleToOrganization(orgID uint, userID uint, emails []*string) ([]string, *common.ErrorCodeMessage) {
+	org, err := o.organizationRepository.FindOrganizationByID(orgID)
+	if err != nil {
+		return nil, &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusBadRequest,
+			ServiceCode: common.ErrCodeUserDoesNotHavePermission,
+			Message:     common.ErrMessageUserDoesNotHavePermission,
+		}
+	}
+	if org == nil {
+		return nil, &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusBadRequest,
+			ServiceCode: common.ErrCodeOrganizationNotExist,
+			Message:     common.ErrMessageOrganizationNotExist,
+		}
+	}
+	isManager, _ := o.CheckUserRoleInOrganization(orgID, userID)
+	if !isManager {
+		return nil, &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusBadRequest,
+			ServiceCode: common.ErrCodeUserDoesNotHavePermission,
+			Message:     common.ErrMessageUserDoesNotHavePermission,
+		}
+	}
+	validEmails, err := o.userRepository.FindUsersNotInOrganization(emails)
+	if err != nil {
+		return nil, &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusInternalServerError,
+			ServiceCode: common.ErrCodeInternalError,
+			Message:     err.Error(),
+		}
+	}
+	err = o.SendOrganizationInvitationToUsers(o.emailConfig.SenderEmail, o.emailConfig.SenderPassword, validEmails, org.Name)
+	if err != nil {
+		return nil, &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusInternalServerError,
+			ServiceCode: common.ErrCodeInternalError,
+			Message:     err.Error(),
+		}
+	}
+	return validEmails, nil
+}
+
 func (o *OrganizationService) CheckUserRoleInOrganization(orgID uint, userID uint) (bool, error) {
 	user, err := o.userRepository.FinduserByID(userID)
 	if err != nil {
@@ -146,4 +196,11 @@ func (o *OrganizationService) CheckUserRoleInOrganization(orgID uint, userID uin
 		return true, nil
 	}
 	return false, nil
+}
+
+func (o *OrganizationService) SendOrganizationInvitationToUsers(senderEmail string, senderPassword string, receiverEmail []string, orgName string) error {
+	if err := utils.SendOrganizationInvitation(orgName, o.emailConfig.AcceptURL, senderEmail, senderPassword, receiverEmail); err != nil {
+		return err
+	}
+	return nil
 }
