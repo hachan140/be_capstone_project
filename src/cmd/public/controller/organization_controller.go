@@ -127,7 +127,7 @@ func (o *OrganizationController) AddPeopleToOrganization(ctx *gin.Context) {
 		apihelper.AbortErrorHandle(ctx, common.ErrCodeInvalidRequest)
 		return
 	}
-	validEmails, _, errRes := o.organizationService.AddPeopleToOrganization(uint(orgID), uint(userID), req.Emails)
+	validEmails, errRes := o.organizationService.AddPeopleToOrganization(uint(orgID), uint(userID), req.Emails)
 	if errRes != nil {
 		logger.Error(ctx, tag, err)
 		apihelper.AbortErrorHandle(ctx, errRes.ServiceCode)
