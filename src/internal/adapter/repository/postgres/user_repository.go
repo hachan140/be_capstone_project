@@ -15,6 +15,7 @@ type IUserRepository interface {
 	UpdateUserSocial(userID uint) error
 	FindUsersInOrganization(emails []*string) ([]string, error)
 	FindUsersNotInOrganization(emails []*string) ([]string, error)
+	AddPeopleOrganization(userID uint, orgID uint) error
 }
 
 type UserRepository struct {
@@ -94,4 +95,12 @@ func (u *UserRepository) UpdateUserSocial(userID uint) error {
 	}
 	return nil
 
+}
+
+func (u *UserRepository) AddPeopleOrganization(userID uint, orgID uint) error {
+	err := u.storage.Exec("update users set organization_id = ? where id = ?", orgID, userID).Error
+	if err != nil {
+		return err
+	}
+	return nil
 }

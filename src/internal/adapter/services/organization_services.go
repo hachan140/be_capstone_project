@@ -21,6 +21,7 @@ type IOrganizationService interface {
 	FindOrganizationByID(orgID uint, userID uint) (*dtos.Organization, error)
 	CheckUserRoleInOrganization(orgID uint, userID uint) (bool, error)
 	AddPeopleToOrganization(orgID uint, userID uint, emails []*string) ([]string, *common.ErrorCodeMessage)
+	AcceptOrganizationInvitation(orgID uint, userID uint) *common.ErrorCodeMessage
 }
 
 type OrganizationService struct {
@@ -182,6 +183,54 @@ func (o *OrganizationService) AddPeopleToOrganization(orgID uint, userID uint, e
 		}
 	}
 	return validEmails, nil
+}
+
+func (o *OrganizationService) AcceptOrganizationInvitation(orgID uint, userID uint) *common.ErrorCodeMessage {
+	org, err := o.organizationRepository.FindOrganizationByID(orgID)
+	if err != nil {
+		return &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusInternalServerError,
+			ServiceCode: common.ErrCodeInternalError,
+			Message:     err.Error(),
+		}
+	}
+	if org == nil {
+		return &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusBadRequest,
+			ServiceCode: common.ErrCodeOrganizationNotExist,
+			Message:     common.ErrMessageOrganizationNotExist,
+		}
+	}
+	user, err := o.userRepository.FinduserByID(userID)
+	if err != nil {
+		return &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusInternalServerError,
+			ServiceCode: common.ErrCodeInternalError,
+			Message:     err.Error(),
+		}
+	}
+	if user == nil {
+		return &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusBadRequest,
+			ServiceCode: common.ErrCodeUserNotFound,
+			Message:     common.ErrMessageInvalidUser,
+		}
+	}
+	if user.OrganizationID != 0 {
+		return &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusBadRequest,
+			ServiceCode: common.ErrCodeUserAlreadyInOtherOrganization,
+			Message:     common.ErrMessageUserAlreadyInOtherOrganization,
+		}
+	}
+	if err := o.userRepository.AddPeopleOrganization(userID, orgID); err != nil {
+		return &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusInternalServerError,
+			ServiceCode: common.ErrCodeInternalError,
+			Message:     err.Error(),
+		}
+	}
+	return nil
 }
 
 func (o *OrganizationService) CheckUserRoleInOrganization(orgID uint, userID uint) (bool, error) {

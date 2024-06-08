@@ -40,6 +40,10 @@ func RegisterGinRouters(
 		organizationGroup.PATCH("/:id", organizationController.UpdateOrganization)
 		organizationGroup.POST("/:id/add-people", organizationController.AddPeopleToOrganization)
 	}
+	acceptInvitation := in.Group("/organization")
+	{
+		acceptInvitation.GET(":orgID/user/:userID", organizationController.AcceptOrganizationInvitation)
+	}
 
 	categoryGroup := in.Group("/category")
 	categoryGroup.Use(middleware.ValidateToken(publicKey))
