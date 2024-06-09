@@ -18,7 +18,9 @@ type ResetPasswordInfo struct {
 	ResetLink string
 }
 
-func SendOrganizationInvitation(organizationName string, joinLink string, sender string, senderPassword string, receivers []string) error {
+func SendOrganizationInvitation(orgID uint, organizationName string, sender string, senderPassword string, receiver string) error {
+	joinLink := fmt.Sprintf("%s/accept/%d/user/%s", "http://34.143.155.117:8080", orgID, receiver)
+	fmt.Println("joinLink: " + joinLink)
 	emailData := EmailData{
 		OrganizationName: organizationName,
 		JoinLink:         joinLink,
@@ -35,18 +37,16 @@ func SendOrganizationInvitation(organizationName string, joinLink string, sender
 	if err := t.Execute(&body, emailData); err != nil {
 		return err
 	}
-	for _, recipient := range receivers {
-		m := gomail.NewMessage()
-		m.SetHeader("From", sender)
-		m.SetHeader("To", recipient)
-		m.SetHeader("Subject", "GENIFAST-SEARCH Invitation")
-		m.SetBody("text/html", body.String())
-		d := gomail.NewDialer("smtp.gmail.com", 587, sender, senderPassword)
-		d.TLSConfig = &tls.Config{InsecureSkipVerify: true}
-		if err := d.DialAndSend(m); err != nil {
-			fmt.Println(err)
-			return err
-		}
+	m := gomail.NewMessage()
+	m.SetHeader("From", sender)
+	m.SetHeader("To", receiver)
+	m.SetHeader("Subject", "GENIFAST-SEARCH Invitation")
+	m.SetBody("text/html", body.String())
+	d := gomail.NewDialer("smtp.gmail.com", 587, sender, senderPassword)
+	d.TLSConfig = &tls.Config{InsecureSkipVerify: true}
+	if err := d.DialAndSend(m); err != nil {
+		fmt.Println(err)
+		return err
 	}
 
 	fmt.Println("Email sent successfully!")

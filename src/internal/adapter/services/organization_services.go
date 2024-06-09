@@ -8,7 +8,9 @@ import (
 	"be-capstone-project/src/internal/core/common_configs"
 	"be-capstone-project/src/internal/core/dtos"
 	"be-capstone-project/src/internal/core/dtos/request"
+	"be-capstone-project/src/internal/core/logger"
 	"be-capstone-project/src/internal/core/utils"
+	"context"
 	"errors"
 	_ "gopkg.in/gomail.v2"
 	"net/http"
@@ -20,8 +22,8 @@ type IOrganizationService interface {
 	UpdateOrganization(orgID uint, userID uint, req *request.UpdateOrganizationRequest) error
 	FindOrganizationByID(orgID uint, userID uint) (*dtos.Organization, error)
 	CheckUserRoleInOrganization(orgID uint, userID uint) (bool, error)
-	AddPeopleToOrganization(orgID uint, userID uint, emails []*string) ([]string, *common.ErrorCodeMessage)
-	AcceptOrganizationInvitation(orgID uint, userID uint) *common.ErrorCodeMessage
+	AddPeopleToOrganization(ctx context.Context, orgID uint, userID uint, emails []*string) ([]string, *common.ErrorCodeMessage)
+	AcceptOrganizationInvitation(orgID uint, userEmail string) *common.ErrorCodeMessage
 }
 
 type OrganizationService struct {
@@ -142,7 +144,7 @@ func (o *OrganizationService) FindOrganizationByID(orgID uint, userID uint) (*dt
 	return orgDTO, nil
 }
 
-func (o *OrganizationService) AddPeopleToOrganization(orgID uint, userID uint, emails []*string) ([]string, *common.ErrorCodeMessage) {
+func (o *OrganizationService) AddPeopleToOrganization(ctx context.Context, orgID uint, userID uint, emails []*string) ([]string, *common.ErrorCodeMessage) {
 	org, err := o.organizationRepository.FindOrganizationByID(orgID)
 	if err != nil {
 		return nil, &common.ErrorCodeMessage{
@@ -174,18 +176,15 @@ func (o *OrganizationService) AddPeopleToOrganization(orgID uint, userID uint, e
 			Message:     err.Error(),
 		}
 	}
-	err = o.SendOrganizationInvitationToUsers(o.emailConfig.SenderEmail, o.emailConfig.SenderPassword, validEmails, org.Name)
-	if err != nil {
-		return nil, &common.ErrorCodeMessage{
-			HTTPCode:    http.StatusInternalServerError,
-			ServiceCode: common.ErrCodeInternalError,
-			Message:     err.Error(),
+	for _, email := range validEmails {
+		if err := utils.SendOrganizationInvitation(orgID, org.Name, o.emailConfig.SenderEmail, o.emailConfig.SenderPassword, email); err != nil {
+			logger.Error(ctx, err.Error())
 		}
 	}
 	return validEmails, nil
 }
 
-func (o *OrganizationService) AcceptOrganizationInvitation(orgID uint, userID uint) *common.ErrorCodeMessage {
+func (o *OrganizationService) AcceptOrganizationInvitation(orgID uint, userEmail string) *common.ErrorCodeMessage {
 	org, err := o.organizationRepository.FindOrganizationByID(orgID)
 	if err != nil {
 		return &common.ErrorCodeMessage{
@@ -201,7 +200,7 @@ func (o *OrganizationService) AcceptOrganizationInvitation(orgID uint, userID ui
 			Message:     common.ErrMessageOrganizationNotExist,
 		}
 	}
-	user, err := o.userRepository.FinduserByID(userID)
+	user, err := o.userRepository.FindUserByEmail(userEmail)
 	if err != nil {
 		return &common.ErrorCodeMessage{
 			HTTPCode:    http.StatusInternalServerError,
@@ -223,7 +222,7 @@ func (o *OrganizationService) AcceptOrganizationInvitation(orgID uint, userID ui
 			Message:     common.ErrMessageUserAlreadyInOtherOrganization,
 		}
 	}
-	if err := o.userRepository.AddPeopleOrganization(userID, orgID); err != nil {
+	if err := o.userRepository.AddPeopleOrganization(user.ID, orgID); err != nil {
 		return &common.ErrorCodeMessage{
 			HTTPCode:    http.StatusInternalServerError,
 			ServiceCode: common.ErrCodeInternalError,
@@ -248,8 +247,6 @@ func (o *OrganizationService) CheckUserRoleInOrganization(orgID uint, userID uin
 }
 
 func (o *OrganizationService) SendOrganizationInvitationToUsers(senderEmail string, senderPassword string, receiverEmail []string, orgName string) error {
-	if err := utils.SendOrganizationInvitation(orgName, o.emailConfig.AcceptURL, senderEmail, senderPassword, receiverEmail); err != nil {
-		return err
-	}
+
 	return nil
 }

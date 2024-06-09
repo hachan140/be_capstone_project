@@ -46,7 +46,7 @@ func RegisterGinRouters(
 	}
 	acceptInvitation := in.Group("/accept")
 	{
-		acceptInvitation.GET(":orgID/user/:userID", organizationController.AcceptOrganizationInvitation)
+		acceptInvitation.GET("/:orgID/user/:userEmail", organizationController.AcceptOrganizationInvitation)
 	}
 
 	categoryGroup := in.Group("/category")
