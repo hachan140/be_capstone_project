@@ -66,18 +66,22 @@ func BootstrapAndRun() {
 	organizationRepositoy := postgres.NewOrganizationRepository(postgresClient)
 	refreshTokenRepository := postgres.NewRefreshTokenRepository(postgresClient)
 	categoryRepository := postgres.NewCategoryRepository(postgresClient)
+	documentRepository := postgres.NewDocumentRepository(postgresClient)
+	multimediaRepository := postgres.NewMultiMediaRepository(postgresClient)
 
 	// Service layer
 	sampleService := services.NewSampleService(sampleRepository)
 	userService := services.NewUserService(userRepository, refreshTokenRepository, *cfg)
 	organizationService := services.NewOrganizationService(organizationRepositoy, userRepository, cfg.EmailConfig)
 	categoryService := services.NewCategoryService(categoryRepository, userRepository)
+	hyperDocumentService := services.NewHyperDocumentService(documentRepository, multimediaRepository)
 
 	// Controller layer
 	sampleController := controller.NewSampleController(sampleService)
 	authController := controller.NewAuthController(userService)
 	organizationController := controller.NewOrganizationController(organizationService)
 	categoryController := controller.NewCategoryController(categoryService)
+	hyperDocumentController := controller.NewHyperDocumentController(hyperDocumentService)
 
 	engine := gin.New()
 	//Register middleware and router
@@ -98,7 +102,7 @@ func BootstrapAndRun() {
 	configCors.MaxAge = 12 * time.Hour
 	engine.Use(cors.New(configCors))
 
-	router.RegisterGinRouters(engine, &sampleController, &authController, &organizationController, &categoryController)
+	router.RegisterGinRouters(engine, &sampleController, &authController, &organizationController, &categoryController, &hyperDocumentController)
 
 	srv := webserver_http.NewHttpServer(engine, cfg)
 

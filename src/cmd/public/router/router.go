@@ -15,6 +15,7 @@ func RegisterGinRouters(
 	authController *controller.AuthController,
 	organizationController *controller.OrganizationController,
 	categoryController *controller.CategoryController,
+	hyperDocumentController *controller.HyperDocumentController,
 ) {
 	publicKey := os.Getenv("ACCESS_TOKEN_PUBLIC_KEY")
 
@@ -52,6 +53,12 @@ func RegisterGinRouters(
 		categoryGroup.GET("/:id", categoryController.ViewCategoryByID)
 		categoryGroup.PATCH("/:id", categoryController.UpdateCategory)
 		categoryGroup.GET("/organization/:id", categoryController.ViewListCategoryByOrganization)
+	}
+
+	documentGroup := in.Group("/document")
+	documentGroup.Use(middleware.ValidateToken(publicKey))
+	{
+		documentGroup.GET("", hyperDocumentController.FilterHyperDocument)
 	}
 	group := in.Group("/test")
 	{
