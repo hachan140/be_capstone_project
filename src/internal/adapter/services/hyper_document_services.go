@@ -11,6 +11,7 @@ import (
 )
 
 type IHyperDocumentService interface {
+	FilterHyperDocument(ctx context.Context, req request.HyperDocumentFilterParam) ([]*dtos.HyperDocument, *common.ErrorCodeMessage)
 }
 
 type HyperDocumentService struct {
