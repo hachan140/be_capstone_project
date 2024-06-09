@@ -53,6 +53,12 @@ func RegisterGinRouters(
 		categoryGroup.PATCH("/:id", categoryController.UpdateCategory)
 		categoryGroup.GET("/organization/:id", categoryController.ViewListCategoryByOrganization)
 	}
+
+	documentGroup := in.Group("/document")
+	documentGroup.Use(middleware.ValidateToken(publicKey))
+	{
+
+	}
 	group := in.Group("/test")
 	{
 		group.GET("", func(context *gin.Context) {
