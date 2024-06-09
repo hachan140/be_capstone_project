@@ -6,6 +6,7 @@ import (
 	"be-capstone-project/src/internal/core/common"
 	"be-capstone-project/src/internal/core/dtos/request"
 	"be-capstone-project/src/internal/core/logger"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
@@ -105,4 +106,51 @@ func (a *AuthController) RefreshToken(ctx *gin.Context) {
 		return
 	}
 	apihelper.SuccessfulHandle(ctx, res)
+}
+
+func (a *AuthController) ResetPasswordRequest(ctx *gin.Context) {
+	tag := "[AuthController] "
+	var req request.ResetPasswordRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		logger.Error(ctx, tag, err)
+		apihelper.AbortErrorHandle(ctx, common.ErrCodeInvalidRequest)
+		return
+	}
+	if err := req.Validate(); err != nil {
+		logger.Error(ctx, tag, err)
+		apihelper.AbortErrorHandle(ctx, err.ServiceCode)
+		return
+	}
+	if err := a.userService.ResetPasswordRequest(ctx, &req); err != nil {
+		logger.Error(ctx, tag, err)
+		apihelper.AbortErrorHandle(ctx, err.ServiceCode)
+		return
+	}
+	apihelper.SuccessfulHandle(ctx, nil)
+}
+
+func (a *AuthController) ResetPassword(ctx *gin.Context) {
+	tag := "[AuthController] "
+	var req request.ResetPassword
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		logger.Error(ctx, tag, err)
+		apihelper.AbortErrorHandle(ctx, common.ErrCodeInvalidRequest)
+		return
+	}
+	if err := req.Validate(); err != nil {
+		logger.Error(ctx, tag, err)
+		apihelper.AbortErrorHandle(ctx, err.ServiceCode)
+		return
+	}
+	email := ""
+	userEmail, ok := ctx.Get("email")
+	if ok {
+		email = fmt.Sprintf("%v", userEmail)
+	}
+	if err := a.userService.ResetPassword(ctx, email, &req); err != nil {
+		logger.Error(ctx, tag, err)
+		apihelper.AbortErrorHandle(ctx, err.ServiceCode)
+		return
+	}
+	apihelper.SuccessfulHandle(ctx, nil)
 }
