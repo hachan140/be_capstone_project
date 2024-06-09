@@ -54,3 +54,12 @@ type EmailConfig struct {
 	SenderEmail    string `envconfig:"SENDER_EMAIL"`
 	SenderPassword string `envconfig:"SENDER_PASSWORD"`
 }
+
+type ResetPasswordConfig struct {
+	LinkResetPassword           string `envconfig:"LINK_RESET_PASSWORD"`
+	ResetPasswordPrivateKey     string `envconfig:"RESET_PASSWORD_PRIVATE_KEY"`
+	ResetPasswordPublicKey      string `envconfig:"RESET_PASSWORD_PUBLIC_KEY"`
+	ResetPasswordTokenTTL       int64  `envconfig:"RESET_PASSWORD_TOKEN_TTL"`
+	ResetPasswordSender         string `envconfig:"RESET_PASSWORD_SENDER"`
+	ResetPasswordSenderPassword string `envconfig:"RESET_PASSWORD_SENDER_PASSWORD"`
+}

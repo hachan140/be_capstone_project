@@ -14,6 +14,7 @@ import (
 	"fmt"
 	"github.com/golang-jwt/jwt"
 	"log"
+	"net/http"
 	"strings"
 	"time"
 )
@@ -23,6 +24,8 @@ type IUserService interface {
 	LoginByUserEmail(ctx context.Context, req *request.LoginRequest) (*response.LoginResponse, error)
 	LoginSocial(ctx context.Context, req *request.SocialLoginRequest) (*response.LoginResponse, error)
 	RefreshToken(ctx context.Context, req *request.RefreshTokenRequest) (*response.LoginResponse, error)
+	ResetPasswordRequest(ctx context.Context, req *request.ResetPasswordRequest) *common.ErrorCodeMessage
+	ResetPassword(ctx context.Context, email string, req *request.ResetPassword) *common.ErrorCodeMessage
 }
 
 type UserService struct {
@@ -73,7 +76,8 @@ func (u *UserService) LoginByUserEmail(ctx context.Context, req *request.LoginRe
 		return nil, errors.New(common.ErrMessageInvalidPassword)
 	}
 	ttl := time.Duration(u.config.TokenConfig.AccessTokenTimeToLive) * time.Second
-	accessToken, err := u.createToken(ttl, userModel.Email, userModel.ID, "user_credentials")
+	privateKey := u.config.TokenConfig.AccessTokenPrivateKey
+	accessToken, err := u.createToken(ttl, userModel.Email, userModel.ID, "user_credentials", privateKey)
 	if err != nil {
 		return nil, err
 	}
@@ -122,7 +126,8 @@ func (u *UserService) LoginSocial(ctx context.Context, req *request.SocialLoginR
 		}
 	}
 	ttl := time.Duration(u.config.TokenConfig.AccessTokenTimeToLive) * time.Second
-	accessToken, err := u.createToken(ttl, userModel.Email, userModel.ID, "socials")
+	privateKey := u.config.TokenConfig.AccessTokenPrivateKey
+	accessToken, err := u.createToken(ttl, userModel.Email, userModel.ID, "socials", privateKey)
 	if err != nil {
 		return nil, err
 	}
@@ -154,7 +159,8 @@ func (u *UserService) RefreshToken(ctx context.Context, req *request.RefreshToke
 		return nil, errors.New(common.ErrMessageInvalidUser)
 	}
 	ttl := time.Duration(u.config.TokenConfig.AccessTokenTimeToLive) * time.Second
-	accessToken, err := u.createToken(ttl, userModel.Email, userModel.ID, "user_credentials")
+	privateKey := u.config.TokenConfig.AccessTokenPrivateKey
+	accessToken, err := u.createToken(ttl, userModel.Email, userModel.ID, "user_credentials", privateKey)
 	if err != nil {
 		return nil, err
 	}
@@ -170,8 +176,74 @@ func (u *UserService) RefreshToken(ctx context.Context, req *request.RefreshToke
 	return res, nil
 }
 
-func (u *UserService) createToken(ttl time.Duration, email string, userID uint, aud string) (string, error) {
-	privateKey := []byte(u.config.TokenConfig.AccessTokenPrivateKey)
+func (u *UserService) ResetPasswordRequest(ctx context.Context, req *request.ResetPasswordRequest) *common.ErrorCodeMessage {
+	var userModel *model.User
+	userModel, err := u.userRepository.FindUserByEmail(req.Email)
+	if err != nil {
+		logger.Error(ctx, "Error when find user email", err)
+		return &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusInternalServerError,
+			ServiceCode: common.ErrCodeInternalError,
+			Message:     err.Error(),
+		}
+	}
+	if userModel == nil {
+		return &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusBadRequest,
+			ServiceCode: common.ErrCodeInvalidEmail,
+			Message:     common.ErrMessageInvalidEmail,
+		}
+	}
+	token, err := u.createToken(time.Duration(u.config.ResetPasswordConfig.ResetPasswordTokenTTL), req.Email, userModel.ID, "reset_password", u.config.ResetPasswordConfig.ResetPasswordPrivateKey)
+	if err != nil {
+		return &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusInternalServerError,
+			ServiceCode: common.ErrCodeInternalError,
+			Message:     err.Error(),
+		}
+	}
+	resetPasswordLink := fmt.Sprintf("%s?token=%s", u.config.ResetPasswordConfig.LinkResetPassword, token)
+	err = utils.SendResetPasswordLink(resetPasswordLink, u.config.ResetPasswordConfig.ResetPasswordSender, u.config.ResetPasswordConfig.ResetPasswordSenderPassword, req.Email)
+	if err != nil {
+		return &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusInternalServerError,
+			ServiceCode: common.ErrCodeInternalError,
+			Message:     err.Error(),
+		}
+	}
+	return nil
+}
+
+func (u *UserService) ResetPassword(ctx context.Context, email string, req *request.ResetPassword) *common.ErrorCodeMessage {
+	var userModel *model.User
+	userModel, err := u.userRepository.FindUserByEmail(email)
+	if err != nil {
+		logger.Error(ctx, "Error when find user email", err)
+		return &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusInternalServerError,
+			ServiceCode: common.ErrCodeInternalError,
+			Message:     err.Error(),
+		}
+	}
+	if userModel == nil {
+		return &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusBadRequest,
+			ServiceCode: common.ErrCodeInvalidEmail,
+			Message:     common.ErrMessageInvalidEmail,
+		}
+	}
+	if err := u.userRepository.ResetPassword(userModel.ID, req.NewPassword); err != nil {
+		return &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusInternalServerError,
+			ServiceCode: common.ErrCodeInternalError,
+			Message:     err.Error(),
+		}
+	}
+	return nil
+}
+
+func (u *UserService) createToken(ttl time.Duration, email string, userID uint, aud string, prvKey string) (string, error) {
+	privateKey := []byte(prvKey)
 	key, err := jwt.ParseRSAPrivateKeyFromPEM(privateKey)
 	if err != nil {
 		return "", fmt.Errorf("create: parse key: %w", err)

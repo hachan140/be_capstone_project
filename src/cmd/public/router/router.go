@@ -18,6 +18,7 @@ func RegisterGinRouters(
 	hyperDocumentController *controller.HyperDocumentController,
 ) {
 	publicKey := os.Getenv("ACCESS_TOKEN_PUBLIC_KEY")
+	publicKeyResetPassword := os.Getenv("RESET_PASSWORD_PUBLIC_KEY")
 
 	sampleGroup := in.Group("/sample")
 	sampleGroup.Use(middleware.ValidateToken(publicKey))
@@ -31,6 +32,8 @@ func RegisterGinRouters(
 		authGroup.POST("/signup", authController.Signup)
 		authGroup.POST("/social-login", authController.SocialLogin)
 		authGroup.POST("/refresh-token", authController.RefreshToken)
+		authGroup.POST("/reset-password/request", authController.ResetPasswordRequest)
+		authGroup.Use(middleware.ValidateToken(publicKeyResetPassword)).POST("/reset-password", authController.ResetPassword)
 	}
 
 	organizationGroup := in.Group("/organization")
