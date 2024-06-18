@@ -35,10 +35,5 @@ func (c *UpdateCategoryRequest) Validate() error {
 	if *c.Name == "" {
 		return errors.New(common.ErrMessageInvalidCategoryName)
 	}
-	if c.Status != nil {
-		if *c.Status != 0 || *c.Status != 1 {
-			return errors.New(common.ErrMessageInvalidStatus)
-		}
-	}
 	return nil
 }
