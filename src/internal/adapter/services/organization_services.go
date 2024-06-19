@@ -60,7 +60,7 @@ func (o *OrganizationService) CreateOrganization(userId uint, req *request.Creat
 		Description: req.Description,
 		CreatedAt:   time.Now(),
 		CreatedBy:   req.CreatedBy,
-		Status:      3,
+		Status:      2,
 	}
 	if err := o.organizationRepository.CreateOrganization(orgModel); err != nil {
 		return err

@@ -121,12 +121,13 @@ func (a *AuthController) ResetPasswordRequest(ctx *gin.Context) {
 		apihelper.AbortErrorHandle(ctx, err.ServiceCode)
 		return
 	}
-	if err := a.userService.ResetPasswordRequest(ctx, &req); err != nil {
+	token, err := a.userService.ResetPasswordRequest(ctx, &req)
+	if err != nil {
 		logger.Error(ctx, tag, err)
 		apihelper.AbortErrorHandle(ctx, err.ServiceCode)
 		return
 	}
-	apihelper.SuccessfulHandle(ctx, nil)
+	apihelper.SuccessfulHandle(ctx, token)
 }
 
 func (a *AuthController) ResetPassword(ctx *gin.Context) {

@@ -24,7 +24,7 @@ type IUserService interface {
 	LoginByUserEmail(ctx context.Context, req *request.LoginRequest) (*response.LoginResponse, error)
 	LoginSocial(ctx context.Context, req *request.SocialLoginRequest) (*response.LoginResponse, error)
 	RefreshToken(ctx context.Context, req *request.RefreshTokenRequest) (*response.LoginResponse, error)
-	ResetPasswordRequest(ctx context.Context, req *request.ResetPasswordRequest) *common.ErrorCodeMessage
+	ResetPasswordRequest(ctx context.Context, req *request.ResetPasswordRequest) (*string, *common.ErrorCodeMessage)
 	ResetPassword(ctx context.Context, email string, req *request.ResetPassword) *common.ErrorCodeMessage
 }
 
@@ -176,27 +176,27 @@ func (u *UserService) RefreshToken(ctx context.Context, req *request.RefreshToke
 	return res, nil
 }
 
-func (u *UserService) ResetPasswordRequest(ctx context.Context, req *request.ResetPasswordRequest) *common.ErrorCodeMessage {
+func (u *UserService) ResetPasswordRequest(ctx context.Context, req *request.ResetPasswordRequest) (*string, *common.ErrorCodeMessage) {
 	var userModel *model.User
 	userModel, err := u.userRepository.FindUserByEmail(req.Email)
 	if err != nil {
 		logger.Error(ctx, "Error when find user email", err)
-		return &common.ErrorCodeMessage{
+		return nil, &common.ErrorCodeMessage{
 			HTTPCode:    http.StatusInternalServerError,
 			ServiceCode: common.ErrCodeInternalError,
 			Message:     err.Error(),
 		}
 	}
 	if userModel == nil {
-		return &common.ErrorCodeMessage{
+		return nil, &common.ErrorCodeMessage{
 			HTTPCode:    http.StatusBadRequest,
 			ServiceCode: common.ErrCodeInvalidEmail,
 			Message:     common.ErrMessageInvalidEmail,
 		}
 	}
-	token, err := u.createToken(time.Duration(u.config.ResetPasswordConfig.ResetPasswordTokenTTL), req.Email, userModel.ID, "reset_password", u.config.ResetPasswordConfig.ResetPasswordPrivateKey)
+	token, err := u.createToken(time.Duration(u.config.ResetPasswordConfig.ResetPasswordTokenTTL)*time.Second, req.Email, userModel.ID, "reset_password", u.config.ResetPasswordConfig.ResetPasswordPrivateKey)
 	if err != nil {
-		return &common.ErrorCodeMessage{
+		return nil, &common.ErrorCodeMessage{
 			HTTPCode:    http.StatusInternalServerError,
 			ServiceCode: common.ErrCodeInternalError,
 			Message:     err.Error(),
@@ -205,13 +205,13 @@ func (u *UserService) ResetPasswordRequest(ctx context.Context, req *request.Res
 	resetPasswordLink := fmt.Sprintf("%s?token=%s", u.config.ResetPasswordConfig.LinkResetPassword, token)
 	err = utils.SendResetPasswordLink(resetPasswordLink, u.config.ResetPasswordConfig.ResetPasswordSender, u.config.ResetPasswordConfig.ResetPasswordSenderPassword, req.Email)
 	if err != nil {
-		return &common.ErrorCodeMessage{
+		return nil, &common.ErrorCodeMessage{
 			HTTPCode:    http.StatusInternalServerError,
 			ServiceCode: common.ErrCodeInternalError,
 			Message:     err.Error(),
 		}
 	}
-	return nil
+	return nil, nil
 }
 
 func (u *UserService) ResetPassword(ctx context.Context, email string, req *request.ResetPassword) *common.ErrorCodeMessage {

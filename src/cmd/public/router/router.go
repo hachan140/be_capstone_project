@@ -33,7 +33,11 @@ func RegisterGinRouters(
 		authGroup.POST("/social-login", authController.SocialLogin)
 		authGroup.POST("/refresh-token", authController.RefreshToken)
 		authGroup.POST("/reset-password/request", authController.ResetPasswordRequest)
-		authGroup.Use(middleware.ValidateToken(publicKeyResetPassword)).POST("/reset-password", authController.ResetPassword)
+	}
+	resetPassword := in.Group("/reset-password")
+	resetPassword.Use(middleware.ValidateToken(publicKeyResetPassword))
+	{
+		resetPassword.POST("", authController.ResetPassword)
 	}
 
 	organizationGroup := in.Group("/organization")
