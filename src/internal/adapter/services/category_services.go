@@ -79,7 +79,7 @@ func (c *CategoryService) ListCategories(ctx context.Context, orgID uint, userID
 		cRes := &dtos.Category{
 			ID:               c.ID,
 			Name:             c.Name,
-			Description:      c.CreatedBy,
+			Description:      c.Description,
 			ParentCategoryID: c.ParentCategoryID,
 			OrganizationID:   c.OrganizationID,
 			Status:           c.Status,
