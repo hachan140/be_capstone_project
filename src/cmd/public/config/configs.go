@@ -17,6 +17,7 @@ type Config struct {
 	TokenConfig         common_configs.TokenConfig
 	EmailConfig         common_configs.EmailConfig
 	ResetPasswordConfig common_configs.ResetPasswordConfig
+	VerifyEmailConfig   common_configs.VerifyEmailConfig
 }
 
 // mustLoadConfig load config from env and file

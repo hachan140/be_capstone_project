@@ -30,6 +30,7 @@ func RegisterGinRouters(
 	{
 		authGroup.POST("/login", authController.Login)
 		authGroup.POST("/signup", authController.Signup)
+		authGroup.GET("/email/verify", authController.VerifyEmail)
 		authGroup.POST("/social-login", authController.SocialLogin)
 		authGroup.POST("/refresh-token", authController.RefreshToken)
 		authGroup.POST("/reset-password/request", authController.ResetPasswordRequest)

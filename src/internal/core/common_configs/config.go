@@ -63,3 +63,7 @@ type ResetPasswordConfig struct {
 	ResetPasswordSender         string `envconfig:"RESET_PASSWORD_SENDER"`
 	ResetPasswordSenderPassword string `envconfig:"RESET_PASSWORD_SENDER_PASSWORD"`
 }
+
+type VerifyEmailConfig struct {
+	LinkVerifyEmail string `envconfig:"LINK_VERIFY_EMAIL"`
+}

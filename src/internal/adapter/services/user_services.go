@@ -26,6 +26,7 @@ type IUserService interface {
 	RefreshToken(ctx context.Context, req *request.RefreshTokenRequest) (*response.LoginResponse, error)
 	ResetPasswordRequest(ctx context.Context, req *request.ResetPasswordRequest) (*string, *common.ErrorCodeMessage)
 	ResetPassword(ctx context.Context, email string, req *request.ResetPassword) *common.ErrorCodeMessage
+	UpdateUserStatusWhenEmailVerified(ctx context.Context, email string) *common.ErrorCodeMessage
 }
 
 type UserService struct {
@@ -51,12 +52,15 @@ func (u *UserService) CreateUser(ctx context.Context, req *request.SignUpRequest
 		FirstName: req.FistName,
 		LastName:  req.LastName,
 		Email:     req.Email,
-		Status:    1,
+		Status:    2,
 		Password:  hashedPassword,
 		Gender:    req.Gender,
 		CreatedAt: time.Now(),
 	}
 	if err := u.userRepository.CreateUser(ctx, userModel); err != nil {
+		return err
+	}
+	if err := utils.SendVerifyEmailCreateAccount(u.config.VerifyEmailConfig.LinkVerifyEmail, u.config.EmailConfig.SenderEmail, u.config.EmailConfig.SenderPassword, userModel.Email); err != nil {
 		return err
 	}
 	return nil
@@ -233,6 +237,34 @@ func (u *UserService) ResetPassword(ctx context.Context, email string, req *requ
 		}
 	}
 	if err := u.userRepository.ResetPassword(userModel.ID, req.NewPassword); err != nil {
+		return &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusInternalServerError,
+			ServiceCode: common.ErrCodeInternalError,
+			Message:     err.Error(),
+		}
+	}
+	return nil
+}
+
+func (u *UserService) UpdateUserStatusWhenEmailVerified(ctx context.Context, email string) *common.ErrorCodeMessage {
+	var userModel *model.User
+	userModel, err := u.userRepository.FindUserByEmail(email)
+	if err != nil {
+		logger.Error(ctx, "Error when find user email", err)
+		return &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusInternalServerError,
+			ServiceCode: common.ErrCodeInternalError,
+			Message:     err.Error(),
+		}
+	}
+	if userModel == nil {
+		return &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusBadRequest,
+			ServiceCode: common.ErrCodeInvalidEmail,
+			Message:     common.ErrMessageInvalidEmail,
+		}
+	}
+	if err := u.userRepository.UpdateUserStatus(userModel.ID, 1); err != nil {
 		return &common.ErrorCodeMessage{
 			HTTPCode:    http.StatusInternalServerError,
 			ServiceCode: common.ErrCodeInternalError,

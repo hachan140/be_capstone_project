@@ -42,6 +42,25 @@ func (a *AuthController) Signup(ctx *gin.Context) {
 	return
 }
 
+func (a *AuthController) VerifyEmail(ctx *gin.Context) {
+	tag := "[VerifyEmailController]"
+	req := request.VerifyEmail{}
+	if err := ctx.ShouldBindQuery(&req); err != nil {
+		logger.Error(ctx, tag, err)
+		apihelper.AbortErrorHandle(ctx, common.ErrCodeInvalidRequest)
+		return
+	}
+
+	err := a.userService.UpdateUserStatusWhenEmailVerified(ctx, req.Email)
+	if err != nil {
+		logger.ErrorCtx(ctx, tag+"Failed to create sample with error: %v", err)
+		apihelper.AbortErrorHandle(ctx, err.ServiceCode)
+		return
+	}
+	apihelper.SuccessfulHandle(ctx, nil)
+	return
+}
+
 func (a *AuthController) Login(ctx *gin.Context) {
 	tag := "[LoginController] "
 	var req request.LoginRequest
