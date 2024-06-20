@@ -77,7 +77,7 @@ func (a *AuthController) Login(ctx *gin.Context) {
 	res, err := a.userService.LoginByUserEmail(ctx, &req)
 	if err != nil {
 		logger.ErrorCtx(ctx, tag+"Failed to login with error: %v", err)
-		apihelper.AbortErrorHandleCustomMessage(ctx, http.StatusInternalServerError, err.Error())
+		apihelper.AbortErrorHandle(ctx, err.ServiceCode)
 		return
 	}
 	apihelper.SuccessfulHandle(ctx, res)

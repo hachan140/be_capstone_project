@@ -21,7 +21,7 @@ import (
 
 type IUserService interface {
 	CreateUser(ctx context.Context, req *request.SignUpRequest) error
-	LoginByUserEmail(ctx context.Context, req *request.LoginRequest) (*response.LoginResponse, error)
+	LoginByUserEmail(ctx context.Context, req *request.LoginRequest) (*response.LoginResponse, *common.ErrorCodeMessage)
 	LoginSocial(ctx context.Context, req *request.SocialLoginRequest) (*response.LoginResponse, error)
 	RefreshToken(ctx context.Context, req *request.RefreshTokenRequest) (*response.LoginResponse, error)
 	ResetPasswordRequest(ctx context.Context, req *request.ResetPasswordRequest) (*string, *common.ErrorCodeMessage)
@@ -66,29 +66,56 @@ func (u *UserService) CreateUser(ctx context.Context, req *request.SignUpRequest
 	return nil
 }
 
-func (u *UserService) LoginByUserEmail(ctx context.Context, req *request.LoginRequest) (*response.LoginResponse, error) {
+func (u *UserService) LoginByUserEmail(ctx context.Context, req *request.LoginRequest) (*response.LoginResponse, *common.ErrorCodeMessage) {
 	var userModel *model.User
 	userModel, err := u.userRepository.FindUserByEmail(req.Email)
 	if err != nil {
 		logger.Error(ctx, "Error when find user email", err)
-		return nil, err
+		return nil, &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusInternalServerError,
+			ServiceCode: common.ErrCodeInternalError,
+			Message:     err.Error(),
+		}
 	}
 	if userModel == nil {
-		return nil, errors.New(common.ErrMessageInvalidUser)
+		return nil, &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusBadRequest,
+			ServiceCode: common.ErrCodeInvalidUser,
+			Message:     common.ErrMessageInvalidUser,
+		}
+	}
+	if userModel.Status != 1 {
+		return nil, &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusBadRequest,
+			ServiceCode: common.ErrCodeInvalidUser,
+			Message:     common.ErrMessageInvalidUser,
+		}
 	}
 	if err := utils.CheckHash(userModel.Password, req.Password); err != nil {
-		return nil, errors.New(common.ErrMessageInvalidPassword)
+		return nil, &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusInternalServerError,
+			ServiceCode: common.ErrCodeInternalError,
+			Message:     err.Error(),
+		}
 	}
 	ttl := time.Duration(u.config.TokenConfig.AccessTokenTimeToLive) * time.Second
 	privateKey := u.config.TokenConfig.AccessTokenPrivateKey
 	accessToken, err := u.createToken(ttl, userModel.Email, userModel.ID, "user_credentials", privateKey)
 	if err != nil {
-		return nil, err
+		return nil, &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusInternalServerError,
+			ServiceCode: common.ErrCodeInternalError,
+			Message:     err.Error(),
+		}
 	}
 
 	refreshToken, err := u.generateRefreshToken(userModel.ID)
 	if err != nil {
-		return nil, err
+		return nil, &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusInternalServerError,
+			ServiceCode: common.ErrCodeInternalError,
+			Message:     err.Error(),
+		}
 	}
 	res := &response.LoginResponse{
 		AccessToken:  accessToken,
