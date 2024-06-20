@@ -24,6 +24,10 @@ func (d *MultiMediaRepository) FilterMultiMedia(ctx context.Context, query strin
 	sqlQuery := `(SELECT distinct multimedia.* FROM multimedia`
 	sqlQuery += query
 	sqlQuery += ` ORDER BY multimedia.id DESC `
+	sqlQuery += " LIMIT ?"
+	params = append(params, req.PageSize)
+	sqlQuery += " OFFSET ?)"
+	params = append(params, (req.Page-1)*req.PageSize)
 	if err := d.storage.WithContext(ctx).Raw(sqlQuery, params...).Find(&multimedia); err.Error != nil {
 		return nil, err.Error
 	}

@@ -24,6 +24,10 @@ func (d *DocumentRepository) FilterDocument(ctx context.Context, query string, p
 	sqlQuery := `(SELECT distinct documents.* FROM documents`
 	sqlQuery += query
 	sqlQuery += ` ORDER BY documents.id DESC `
+	sqlQuery += " LIMIT ?"
+	params = append(params, req.PageSize)
+	sqlQuery += " OFFSET ?)"
+	params = append(params, (req.Page-1)*req.PageSize)
 	if err := d.storage.WithContext(ctx).Raw(sqlQuery, params...).Find(&documents); err.Error != nil {
 		return nil, err.Error
 	}
