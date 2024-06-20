@@ -10,6 +10,7 @@ type IOrganizationRepository interface {
 	FindOrganizationByID(ID uint) (*model.Organization, error)
 	FindOrganizationByName(name string) (*model.Organization, error)
 	UpdateOrganization(orgID uint, org *model.Organization) error
+	FindOrganizationByAuthor(createdBy string) (*model.Organization, error)
 }
 
 type OrganizationRepository struct {
@@ -42,6 +43,15 @@ func (o *OrganizationRepository) FindOrganizationByID(ID uint) (*model.Organizat
 func (o *OrganizationRepository) FindOrganizationByName(name string) (*model.Organization, error) {
 	var org *model.Organization
 	err := o.storage.Raw("select * from organizations where name = ?", name).Scan(&org).Error
+	if err != nil {
+		return nil, err
+	}
+	return org, nil
+}
+
+func (o *OrganizationRepository) FindOrganizationByAuthor(createdBy string) (*model.Organization, error) {
+	var org *model.Organization
+	err := o.storage.Raw("select * from organizations where created_by = ?", createdBy).Scan(&org).Error
 	if err != nil {
 		return nil, err
 	}

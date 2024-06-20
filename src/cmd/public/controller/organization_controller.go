@@ -44,7 +44,7 @@ func (o *OrganizationController) CreateOrganization(ctx *gin.Context) {
 	err := o.organizationService.CreateOrganization(uint(userID), &req)
 	if err != nil {
 		logger.ErrorCtx(ctx, tag+"Failed to create sample with error: %v", err)
-		apihelper.AbortErrorHandleCustomMessage(ctx, http.StatusInternalServerError, err.Error())
+		apihelper.AbortErrorHandle(ctx, err.ServiceCode)
 		return
 	}
 	apihelper.SuccessfulHandle(ctx, nil)

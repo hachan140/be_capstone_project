@@ -18,7 +18,7 @@ import (
 )
 
 type IOrganizationService interface {
-	CreateOrganization(userId uint, req *request.CreateOrganizationRequest) error
+	CreateOrganization(userId uint, req *request.CreateOrganizationRequest) *common.ErrorCodeMessage
 	UpdateOrganization(orgID uint, userID uint, req *request.UpdateOrganizationRequest) error
 	FindOrganizationByID(orgID uint, userID uint) (*dtos.Organization, error)
 	CheckUserRoleInOrganization(orgID uint, userID uint) (bool, error)
@@ -40,20 +40,51 @@ func NewOrganizationService(orgRepo postgres.IOrganizationRepository, userReposi
 	}
 }
 
-func (o *OrganizationService) CreateOrganization(userId uint, req *request.CreateOrganizationRequest) error {
+func (o *OrganizationService) CreateOrganization(userId uint, req *request.CreateOrganizationRequest) *common.ErrorCodeMessage {
 	user, err := o.userRepository.FinduserByID(userId)
 	if err != nil {
-		return err
+		return &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusInternalServerError,
+			ServiceCode: common.ErrCodeInternalError,
+			Message:     err.Error(),
+		}
 	}
 	if user.OrganizationID != 0 {
-		return errors.New(common.ErrMessageUserAlreadyInOtherOrganization)
+		return &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusBadRequest,
+			ServiceCode: common.ErrCodeUserAlreadyInOtherOrganization,
+			Message:     common.ErrMessageUserAlreadyInOtherOrganization,
+		}
 	}
 	orgByName, err := o.organizationRepository.FindOrganizationByName(req.Name)
 	if err != nil {
-		return err
+		return &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusInternalServerError,
+			ServiceCode: common.ErrCodeInternalError,
+			Message:     err.Error(),
+		}
 	}
 	if orgByName != nil {
-		return errors.New(common.ErrMessageOrganizationExisted)
+		return &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusBadRequest,
+			ServiceCode: common.ErrCodeOrganizationExisted,
+			Message:     common.ErrMessageOrganizationExisted,
+		}
+	}
+	orgByAuthor, err := o.organizationRepository.FindOrganizationByAuthor(user.Email)
+	if err != nil {
+		return &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusInternalServerError,
+			ServiceCode: common.ErrCodeInternalError,
+			Message:     err.Error(),
+		}
+	}
+	if orgByAuthor != nil {
+		return &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusBadRequest,
+			ServiceCode: common.ErrCodeUserAlreadyInOtherOrganization,
+			Message:     common.ErrMessageUserAlreadyInOtherOrganization,
+		}
 	}
 	orgModel := &model.Organization{
 		Name:        req.Name,
@@ -63,12 +94,12 @@ func (o *OrganizationService) CreateOrganization(userId uint, req *request.Creat
 		Status:      2,
 	}
 	if err := o.organizationRepository.CreateOrganization(orgModel); err != nil {
-		return err
+		return &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusInternalServerError,
+			ServiceCode: common.ErrCodeInternalError,
+			Message:     err.Error(),
+		}
 	}
-	/*	err = o.userRepository.UpdateUserOrganizationRole(userId, orgModel.ID, true)
-		if err != nil {
-			return err
-		}*/
 	return nil
 }
 
