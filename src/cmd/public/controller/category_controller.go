@@ -123,7 +123,13 @@ func (c *CategoryController) ViewListCategoryByOrganization(ctx *gin.Context) {
 		apihelper.AbortErrorHandle(ctx, common.ErrCodeInvalidRequest)
 		return
 	}
-	res, err := c.categoryService.ListCategories(ctx, uint(orgID), uint(userID))
+	var req request.GetListCategoryRequest
+	if err := ctx.ShouldBindQuery(&req); err != nil {
+		logger.Error(ctx, tag, err)
+		apihelper.AbortErrorHandle(ctx, common.ErrCodeInvalidRequest)
+		return
+	}
+	res, err := c.categoryService.ListCategories(ctx, uint(orgID), uint(userID), &req)
 	if err != nil {
 		logger.ErrorCtx(ctx, tag+"Failed to get list categories with error: %v", err)
 		apihelper.AbortErrorHandleCustomMessage(ctx, http.StatusInternalServerError, err.Error())

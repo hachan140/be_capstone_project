@@ -14,7 +14,7 @@ import (
 
 type ICategoryService interface {
 	CreateCategory(ctx context.Context, userID uint, req *request.CreateCategoryRequest) error
-	ListCategories(ctx context.Context, orgID uint, userID uint) ([]*dtos.Category, error)
+	ListCategories(ctx context.Context, orgID uint, userID uint, req *request.GetListCategoryRequest) ([]*dtos.Category, error)
 	GetCategoryByID(ctx context.Context, id uint, userID uint) (*dtos.Category, error)
 	UpdateCategoryByID(ctx context.Context, userID uint, catID uint, req *request.UpdateCategoryRequest) error
 }
@@ -62,7 +62,7 @@ func (c *CategoryService) CreateCategory(ctx context.Context, userID uint, req *
 	return nil
 }
 
-func (c *CategoryService) ListCategories(ctx context.Context, orgID uint, userID uint) ([]*dtos.Category, error) {
+func (c *CategoryService) ListCategories(ctx context.Context, orgID uint, userID uint, req *request.GetListCategoryRequest) ([]*dtos.Category, error) {
 	user, err := c.userRepository.FinduserByID(userID)
 	if err != nil {
 		return nil, err
@@ -70,7 +70,14 @@ func (c *CategoryService) ListCategories(ctx context.Context, orgID uint, userID
 	if user.OrganizationID != 0 && user.OrganizationID != orgID {
 		return nil, errors.New(common.ErrMessageUserAlreadyInOtherOrganization)
 	}
-	categories, err := c.categoryRepo.ListCategoryByOrganization(orgID)
+	if req.Page <= 0 {
+		req.Page = 1
+	}
+	if req.PageSize <= 0 || req.PageSize > 100 {
+		req.PageSize = 10
+	}
+	offset := (req.Page - 1) * req.PageSize
+	categories, err := c.categoryRepo.ListCategoryByOrganization(orgID, req.PageSize, offset)
 	if err != nil {
 		return nil, err
 	}
