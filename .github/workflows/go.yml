@@ -53,5 +53,7 @@ jobs:
             # Dừng và gỡ bỏ container hiện tại (nếu có)
             docker stop be-golang-container
             docker rm be-golang-container
+            docker system prune -a
+            docker volume prune
             # Chạy container mới với image đã pull về bên trên
             docker run -d -p 8080:8080 --name be-golang-container ${{ secrets.DOCKERHUB_USERNAME }}/be-golang:${{ github.sha }}
