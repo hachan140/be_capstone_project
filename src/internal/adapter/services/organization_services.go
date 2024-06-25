@@ -91,7 +91,7 @@ func (o *OrganizationService) CreateOrganization(userId uint, req *request.Creat
 		Description: req.Description,
 		CreatedAt:   time.Now(),
 		CreatedBy:   req.CreatedBy,
-		Status:      2,
+		Status:      0,
 	}
 	if err := o.organizationRepository.CreateOrganization(orgModel); err != nil {
 		return &common.ErrorCodeMessage{
