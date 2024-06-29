@@ -43,7 +43,7 @@ func (o *OrganizationController) CreateOrganization(ctx *gin.Context) {
 	err := o.organizationService.CreateOrganization(uint(userID), &req)
 	if err != nil {
 		logger.ErrorCtx(ctx, tag+"Failed to create sample with error: %v", err)
-		apihelper.AbortErrorHandle(ctx, err.ServiceCode)
+		apihelper.AbortErrorHandleCustomMessage(ctx, err.ServiceCode, err.Message)
 		return
 	}
 	apihelper.SuccessfulHandle(ctx, nil)
@@ -81,7 +81,7 @@ func (o *OrganizationController) UpdateOrganization(ctx *gin.Context) {
 	errR := o.organizationService.UpdateOrganization(uint(orgID), uint(userID), &req)
 	if errR != nil {
 		logger.ErrorCtx(ctx, tag+"Failed to create sample with error: %v", errR)
-		apihelper.AbortErrorHandle(ctx, errR.ServiceCode)
+		apihelper.AbortErrorHandleCustomMessage(ctx, errR.ServiceCode, errR.Message)
 		return
 	}
 	apihelper.SuccessfulHandle(ctx, nil)
@@ -102,7 +102,7 @@ func (o *OrganizationController) ViewOrganization(ctx *gin.Context) {
 	res, errR := o.organizationService.FindOrganizationByID(uint(orgID), uint(userID))
 	if errR != nil {
 		logger.ErrorCtx(ctx, tag+"Failed to create sample with error: %v", errR)
-		apihelper.AbortErrorHandle(ctx, errR.ServiceCode)
+		apihelper.AbortErrorHandleCustomMessage(ctx, errR.ServiceCode, errR.Message)
 		return
 	}
 	apihelper.SuccessfulHandle(ctx, res)
@@ -129,7 +129,7 @@ func (o *OrganizationController) AddPeopleToOrganization(ctx *gin.Context) {
 	validEmails, errRes := o.organizationService.AddPeopleToOrganization(ctx, uint(orgID), uint(userID), req.Emails)
 	if errRes != nil {
 		logger.Error(ctx, tag, err)
-		apihelper.AbortErrorHandle(ctx, errRes.ServiceCode)
+		apihelper.AbortErrorHandleCustomMessage(ctx, errRes.ServiceCode, errRes.Message)
 		return
 	}
 	res := map[string][]string{
@@ -150,7 +150,7 @@ func (o *OrganizationController) AcceptOrganizationInvitation(ctx *gin.Context) 
 	userEmail := ctx.Param("userEmail")
 	if err := o.organizationService.AcceptOrganizationInvitation(uint(orgID), userEmail); err != nil {
 		logger.Error(ctx, tag, err)
-		apihelper.AbortErrorHandle(ctx, err.ServiceCode)
+		apihelper.AbortErrorHandleCustomMessage(ctx, err.ServiceCode, err.Message)
 		return
 	}
 	apihelper.SuccessfulHandle(ctx, nil)

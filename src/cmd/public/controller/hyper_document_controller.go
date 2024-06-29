@@ -28,7 +28,7 @@ func (h *HyperDocumentController) FilterHyperDocument(ctx *gin.Context) {
 	res, err := h.hyperDocumentService.FilterHyperDocument(ctx, documentFilterParams)
 	if err != nil {
 		logger.Error(ctx, tag, err)
-		apihelper.AbortErrorHandle(ctx, err.ServiceCode)
+		apihelper.AbortErrorHandleCustomMessage(ctx, err.ServiceCode, err.Message)
 		return
 	}
 	apihelper.SuccessfulHandle(ctx, res)

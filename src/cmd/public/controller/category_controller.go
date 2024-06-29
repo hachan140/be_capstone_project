@@ -43,7 +43,7 @@ func (o *CategoryController) CreateCategory(ctx *gin.Context) {
 	err := o.categoryService.CreateCategory(ctx, uint(userID), &req)
 	if err != nil {
 		logger.ErrorCtx(ctx, tag+"Failed to create category with error: %v", err)
-		apihelper.AbortErrorHandle(ctx, err.ServiceCode)
+		apihelper.AbortErrorHandleCustomMessage(ctx, err.ServiceCode, err.Message)
 		return
 	}
 	apihelper.SuccessfulHandle(ctx, nil)
@@ -131,7 +131,7 @@ func (c *CategoryController) ViewListCategoryByOrganization(ctx *gin.Context) {
 	res, errR := c.categoryService.ListCategories(ctx, uint(orgID), uint(userID), &req)
 	if errR != nil {
 		logger.ErrorCtx(ctx, tag+"Failed to get list categories with error: %v", errR)
-		apihelper.AbortErrorHandle(ctx, errR.ServiceCode)
+		apihelper.AbortErrorHandleCustomMessage(ctx, errR.ServiceCode, errR.Message)
 		return
 	}
 	apihelper.SuccessfulHandle(ctx, res)

@@ -34,7 +34,7 @@ func (a *AuthController) Signup(ctx *gin.Context) {
 	errR := a.userService.CreateUser(ctx, &req)
 	if errR != nil {
 		logger.ErrorCtx(ctx, tag+"Failed to create sample with error: %v", errR)
-		apihelper.AbortErrorHandle(ctx, errR.ServiceCode)
+		apihelper.AbortErrorHandleCustomMessage(ctx, errR.ServiceCode, errR.Message)
 		return
 	}
 	apihelper.SuccessfulHandle(ctx, nil)
@@ -53,7 +53,7 @@ func (a *AuthController) VerifyEmail(ctx *gin.Context) {
 	err := a.userService.UpdateUserStatusWhenEmailVerified(ctx, req.Email)
 	if err != nil {
 		logger.ErrorCtx(ctx, tag+"Failed to create sample with error: %v", err)
-		apihelper.AbortErrorHandle(ctx, err.ServiceCode)
+		apihelper.AbortErrorHandleCustomMessage(ctx, err.ServiceCode, err.Message)
 		return
 	}
 	apihelper.SuccessfulHandle(ctx, nil)
@@ -76,7 +76,7 @@ func (a *AuthController) Login(ctx *gin.Context) {
 	res, err := a.userService.LoginByUserEmail(ctx, &req)
 	if err != nil {
 		logger.ErrorCtx(ctx, tag+"Failed to login with error: %v", err)
-		apihelper.AbortErrorHandle(ctx, err.ServiceCode)
+		apihelper.AbortErrorHandleCustomMessage(ctx, err.ServiceCode, err.Message)
 		return
 	}
 	apihelper.SuccessfulHandle(ctx, res)
@@ -98,7 +98,7 @@ func (a *AuthController) SocialLogin(ctx *gin.Context) {
 	res, errR := a.userService.LoginSocial(ctx, &req)
 	if errR != nil {
 		logger.ErrorCtx(ctx, tag+"Failed to login social with error: %v", errR)
-		apihelper.AbortErrorHandle(ctx, errR.ServiceCode)
+		apihelper.AbortErrorHandleCustomMessage(ctx, errR.ServiceCode, errR.Message)
 		return
 	}
 	apihelper.SuccessfulHandle(ctx, res)
@@ -120,7 +120,7 @@ func (a *AuthController) RefreshToken(ctx *gin.Context) {
 	res, errR := a.userService.RefreshToken(ctx, &req)
 	if errR != nil {
 		logger.ErrorCtx(ctx, tag+"Failed to login social with error: %v", errR)
-		apihelper.AbortErrorHandle(ctx, errR.ServiceCode)
+		apihelper.AbortErrorHandleCustomMessage(ctx, errR.ServiceCode, errR.Message)
 		return
 	}
 	apihelper.SuccessfulHandle(ctx, res)
@@ -136,13 +136,13 @@ func (a *AuthController) ResetPasswordRequest(ctx *gin.Context) {
 	}
 	if err := req.Validate(); err != nil {
 		logger.Error(ctx, tag, err)
-		apihelper.AbortErrorHandle(ctx, err.ServiceCode)
+		apihelper.AbortErrorHandleCustomMessage(ctx, err.ServiceCode, err.Message)
 		return
 	}
 	token, err := a.userService.ResetPasswordRequest(ctx, &req)
 	if err != nil {
 		logger.Error(ctx, tag, err)
-		apihelper.AbortErrorHandle(ctx, err.ServiceCode)
+		apihelper.AbortErrorHandleCustomMessage(ctx, err.ServiceCode, err.Message)
 		return
 	}
 	apihelper.SuccessfulHandle(ctx, token)
@@ -158,7 +158,7 @@ func (a *AuthController) ResetPassword(ctx *gin.Context) {
 	}
 	if err := req.Validate(); err != nil {
 		logger.Error(ctx, tag, err)
-		apihelper.AbortErrorHandle(ctx, err.ServiceCode)
+		apihelper.AbortErrorHandleCustomMessage(ctx, err.ServiceCode, err.Message)
 		return
 	}
 	email := ""
@@ -168,7 +168,7 @@ func (a *AuthController) ResetPassword(ctx *gin.Context) {
 	}
 	if err := a.userService.ResetPassword(ctx, email, &req); err != nil {
 		logger.Error(ctx, tag, err)
-		apihelper.AbortErrorHandle(ctx, err.ServiceCode)
+		apihelper.AbortErrorHandleCustomMessage(ctx, err.ServiceCode, err.Message)
 		return
 	}
 	apihelper.SuccessfulHandle(ctx, nil)

@@ -82,8 +82,8 @@ func (o *OrganizationService) CreateOrganization(userId uint, req *request.Creat
 	if orgByAuthor != nil {
 		return &common.ErrorCodeMessage{
 			HTTPCode:    http.StatusBadRequest,
-			ServiceCode: common.ErrCodeUserAlreadyInOtherOrganization,
-			Message:     common.ErrMessageUserAlreadyInOtherOrganization,
+			ServiceCode: common.ErrCodeUserAlreadyRequestCreateOrganization,
+			Message:     common.ErrMessageUserAlreadyCreateOrganizationRequest,
 		}
 	}
 	orgModel := &model.Organization{
