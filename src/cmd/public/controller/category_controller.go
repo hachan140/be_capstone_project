@@ -8,7 +8,6 @@ import (
 	"be-capstone-project/src/internal/core/logger"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"net/http"
 	"strconv"
 )
 
@@ -44,7 +43,7 @@ func (o *CategoryController) CreateCategory(ctx *gin.Context) {
 	err := o.categoryService.CreateCategory(ctx, uint(userID), &req)
 	if err != nil {
 		logger.ErrorCtx(ctx, tag+"Failed to create category with error: %v", err)
-		apihelper.AbortErrorHandleCustomMessage(ctx, http.StatusInternalServerError, err.Error())
+		apihelper.AbortErrorHandle(ctx, err.ServiceCode)
 		return
 	}
 	apihelper.SuccessfulHandle(ctx, nil)
@@ -82,7 +81,7 @@ func (o *CategoryController) UpdateCategory(ctx *gin.Context) {
 	errRes := o.categoryService.UpdateCategoryByID(ctx, uint(userID), uint(catID), &req)
 	if errRes != nil {
 		logger.ErrorCtx(ctx, tag+"Failed to create category with error: %v", errRes)
-		apihelper.AbortErrorHandleCustomMessage(ctx, http.StatusInternalServerError, errRes.Error())
+		apihelper.AbortErrorHandle(ctx, errRes.ServiceCode)
 		return
 	}
 	apihelper.SuccessfulHandle(ctx, nil)
@@ -102,10 +101,10 @@ func (c *CategoryController) ViewCategoryByID(ctx *gin.Context) {
 	userIDRaw, _ := ctx.Get("user_id")
 	userID, _ := strconv.ParseUint(userIDRaw.(string), 10, 32)
 
-	res, err := c.categoryService.GetCategoryByID(ctx, uint(catID), uint(userID))
-	if err != nil {
+	res, errG := c.categoryService.GetCategoryByID(ctx, uint(catID), uint(userID))
+	if errG != nil {
 		logger.ErrorCtx(ctx, tag+"Failed to get category with error: %v", err)
-		apihelper.AbortErrorHandleCustomMessage(ctx, http.StatusInternalServerError, err.Error())
+		apihelper.AbortErrorHandle(ctx, errG.ServiceCode)
 		return
 	}
 	apihelper.SuccessfulHandle(ctx, res)
@@ -129,10 +128,10 @@ func (c *CategoryController) ViewListCategoryByOrganization(ctx *gin.Context) {
 		apihelper.AbortErrorHandle(ctx, common.ErrCodeInvalidRequest)
 		return
 	}
-	res, err := c.categoryService.ListCategories(ctx, uint(orgID), uint(userID), &req)
-	if err != nil {
-		logger.ErrorCtx(ctx, tag+"Failed to get list categories with error: %v", err)
-		apihelper.AbortErrorHandleCustomMessage(ctx, http.StatusInternalServerError, err.Error())
+	res, errR := c.categoryService.ListCategories(ctx, uint(orgID), uint(userID), &req)
+	if errR != nil {
+		logger.ErrorCtx(ctx, tag+"Failed to get list categories with error: %v", errR)
+		apihelper.AbortErrorHandle(ctx, errR.ServiceCode)
 		return
 	}
 	apihelper.SuccessfulHandle(ctx, res)

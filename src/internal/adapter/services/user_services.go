@@ -10,7 +10,6 @@ import (
 	"be-capstone-project/src/internal/core/logger"
 	"be-capstone-project/src/internal/core/utils"
 	"context"
-	"errors"
 	"fmt"
 	"github.com/golang-jwt/jwt"
 	"log"
@@ -20,10 +19,10 @@ import (
 )
 
 type IUserService interface {
-	CreateUser(ctx context.Context, req *request.SignUpRequest) error
+	CreateUser(ctx context.Context, req *request.SignUpRequest) *common.ErrorCodeMessage
 	LoginByUserEmail(ctx context.Context, req *request.LoginRequest) (*response.LoginResponse, *common.ErrorCodeMessage)
-	LoginSocial(ctx context.Context, req *request.SocialLoginRequest) (*response.LoginResponse, error)
-	RefreshToken(ctx context.Context, req *request.RefreshTokenRequest) (*response.LoginResponse, error)
+	LoginSocial(ctx context.Context, req *request.SocialLoginRequest) (*response.LoginResponse, *common.ErrorCodeMessage)
+	RefreshToken(ctx context.Context, req *request.RefreshTokenRequest) (*response.LoginResponse, *common.ErrorCodeMessage)
 	ResetPasswordRequest(ctx context.Context, req *request.ResetPasswordRequest) (*string, *common.ErrorCodeMessage)
 	ResetPassword(ctx context.Context, email string, req *request.ResetPassword) *common.ErrorCodeMessage
 	UpdateUserStatusWhenEmailVerified(ctx context.Context, email string) *common.ErrorCodeMessage
@@ -39,14 +38,22 @@ func NewUserService(userRepository postgres.IUserRepository, refreshTokenRepo po
 	return &UserService{userRepository: userRepository, refreshTokenRepository: refreshTokenRepo, config: config}
 }
 
-func (u *UserService) CreateUser(ctx context.Context, req *request.SignUpRequest) error {
+func (u *UserService) CreateUser(ctx context.Context, req *request.SignUpRequest) *common.ErrorCodeMessage {
 	hashedPassword, err := utils.EncryptPassword(req.Password)
 	if err != nil {
-		return err
+		return &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusInternalServerError,
+			ServiceCode: common.ErrCodeInternalError,
+			Message:     err.Error(),
+		}
 	}
 	userEmailExisted, err := u.userRepository.FindUserByEmail(req.Email)
 	if userEmailExisted != nil {
-		return errors.New(common.ErrMessageEmailExisted)
+		return &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusBadRequest,
+			ServiceCode: common.ErrCodeEmailExisted,
+			Message:     common.ErrMessageEmailExisted,
+		}
 	}
 	userModel := &model.User{
 		FirstName: req.FistName,
@@ -58,10 +65,18 @@ func (u *UserService) CreateUser(ctx context.Context, req *request.SignUpRequest
 		CreatedAt: time.Now(),
 	}
 	if err := u.userRepository.CreateUser(ctx, userModel); err != nil {
-		return err
+		return &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusInternalServerError,
+			ServiceCode: common.ErrCodeInternalError,
+			Message:     err.Error(),
+		}
 	}
 	if err := utils.SendVerifyEmailCreateAccount(u.config.VerifyEmailConfig.LinkVerifyEmail, u.config.EmailConfig.SenderEmail, u.config.EmailConfig.SenderPassword, userModel.Email); err != nil {
-		return err
+		return &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusInternalServerError,
+			ServiceCode: common.ErrCodeInternalError,
+			Message:     err.Error(),
+		}
 	}
 	return nil
 }
@@ -124,19 +139,31 @@ func (u *UserService) LoginByUserEmail(ctx context.Context, req *request.LoginRe
 	return res, nil
 }
 
-func (u *UserService) LoginSocial(ctx context.Context, req *request.SocialLoginRequest) (*response.LoginResponse, error) {
+func (u *UserService) LoginSocial(ctx context.Context, req *request.SocialLoginRequest) (*response.LoginResponse, *common.ErrorCodeMessage) {
 	var userModel *model.User
 	userModel, err := u.userRepository.FindUserByEmail(req.Email)
 	if err != nil {
 		logger.Error(ctx, "Error when find user email", err)
-		return nil, err
+		return nil, &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusInternalServerError,
+			ServiceCode: common.ErrCodeInternalError,
+			Message:     err.Error(),
+		}
 	}
 	if userModel != nil && !userModel.IsSocial {
 		if !userModel.IsSocial && userModel.Password == "" {
-			return nil, errors.New(common.ErrMessageUserSocialDoesnotExist)
+			return nil, &common.ErrorCodeMessage{
+				HTTPCode:    http.StatusBadRequest,
+				ServiceCode: common.ErrCodeUserSocialDoesNotExist,
+				Message:     common.ErrMessageUserSocialDoesnotExist,
+			}
 		}
 		if err := u.userRepository.UpdateUserSocial(userModel.ID); err != nil {
-			return nil, err
+			return nil, &common.ErrorCodeMessage{
+				HTTPCode:    http.StatusInternalServerError,
+				ServiceCode: common.ErrCodeInternalError,
+				Message:     err.Error(),
+			}
 		}
 	}
 	if userModel == nil {
@@ -153,18 +180,30 @@ func (u *UserService) LoginSocial(ctx context.Context, req *request.SocialLoginR
 		}
 		err := u.userRepository.CreateUser(ctx, userModel)
 		if err != nil {
-			return nil, err
+			return nil, &common.ErrorCodeMessage{
+				HTTPCode:    http.StatusInternalServerError,
+				ServiceCode: common.ErrCodeInternalError,
+				Message:     err.Error(),
+			}
 		}
 	}
 	ttl := time.Duration(u.config.TokenConfig.AccessTokenTimeToLive) * time.Second
 	privateKey := u.config.TokenConfig.AccessTokenPrivateKey
 	accessToken, err := u.createToken(ttl, userModel.Email, userModel.ID, "socials", privateKey)
 	if err != nil {
-		return nil, err
+		return nil, &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusInternalServerError,
+			ServiceCode: common.ErrCodeInternalError,
+			Message:     err.Error(),
+		}
 	}
 	refreshToken, err := u.generateRefreshToken(userModel.ID)
 	if err != nil {
-		return nil, err
+		return nil, &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusInternalServerError,
+			ServiceCode: common.ErrCodeInternalError,
+			Message:     err.Error(),
+		}
 	}
 	res := &response.LoginResponse{
 		AccessToken:  accessToken,
@@ -173,32 +212,56 @@ func (u *UserService) LoginSocial(ctx context.Context, req *request.SocialLoginR
 	return res, nil
 }
 
-func (u *UserService) RefreshToken(ctx context.Context, req *request.RefreshTokenRequest) (*response.LoginResponse, error) {
+func (u *UserService) RefreshToken(ctx context.Context, req *request.RefreshTokenRequest) (*response.LoginResponse, *common.ErrorCodeMessage) {
 	rt, err := u.refreshTokenRepository.FindRefreshTokenByRefreshTokenString(req.RefreshToken)
 	if err != nil {
-		return nil, err
+		return nil, &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusInternalServerError,
+			ServiceCode: common.ErrCodeInternalError,
+			Message:     err.Error(),
+		}
 	}
 	if rt == nil {
-		return nil, errors.New(common.ErrMessageRefreshTokenNotFound)
+		return nil, &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusBadRequest,
+			ServiceCode: common.ErrCodeRefreshTokenNotFound,
+			Message:     common.ErrMessageRefreshTokenNotFound,
+		}
 	}
 	userModel, err := u.userRepository.FinduserByID(rt.UserID)
 	if err != nil {
 		logger.Error(ctx, "Error when find user email", err)
-		return nil, err
+		return nil, &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusInternalServerError,
+			ServiceCode: common.ErrCodeInternalError,
+			Message:     err.Error(),
+		}
 	}
 	if userModel == nil {
-		return nil, errors.New(common.ErrMessageInvalidUser)
+		return nil, &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusBadRequest,
+			ServiceCode: common.ErrCodeInvalidUser,
+			Message:     common.ErrMessageInvalidUser,
+		}
 	}
 	ttl := time.Duration(u.config.TokenConfig.AccessTokenTimeToLive) * time.Second
 	privateKey := u.config.TokenConfig.AccessTokenPrivateKey
 	accessToken, err := u.createToken(ttl, userModel.Email, userModel.ID, "user_credentials", privateKey)
 	if err != nil {
-		return nil, err
+		return nil, &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusInternalServerError,
+			ServiceCode: common.ErrCodeInternalError,
+			Message:     err.Error(),
+		}
 	}
 
 	refreshToken, err := u.generateRefreshToken(userModel.ID)
 	if err != nil {
-		return nil, err
+		return nil, &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusInternalServerError,
+			ServiceCode: common.ErrCodeInternalError,
+			Message:     err.Error(),
+		}
 	}
 	res := &response.LoginResponse{
 		AccessToken:  accessToken,

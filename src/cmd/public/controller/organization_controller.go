@@ -8,7 +8,6 @@ import (
 	"be-capstone-project/src/internal/core/logger"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"net/http"
 	"strconv"
 )
 
@@ -79,10 +78,10 @@ func (o *OrganizationController) UpdateOrganization(ctx *gin.Context) {
 		email = fmt.Sprintf("%v", userEmail)
 	}
 	req.UpdatedBy = email
-	err = o.organizationService.UpdateOrganization(uint(orgID), uint(userID), &req)
-	if err != nil {
-		logger.ErrorCtx(ctx, tag+"Failed to create sample with error: %v", err)
-		apihelper.AbortErrorHandleCustomMessage(ctx, http.StatusInternalServerError, err.Error())
+	errR := o.organizationService.UpdateOrganization(uint(orgID), uint(userID), &req)
+	if errR != nil {
+		logger.ErrorCtx(ctx, tag+"Failed to create sample with error: %v", errR)
+		apihelper.AbortErrorHandle(ctx, errR.ServiceCode)
 		return
 	}
 	apihelper.SuccessfulHandle(ctx, nil)
@@ -100,10 +99,10 @@ func (o *OrganizationController) ViewOrganization(ctx *gin.Context) {
 	}
 	userIDRaw, _ := ctx.Get("user_id")
 	userID, _ := strconv.ParseUint(userIDRaw.(string), 10, 32)
-	res, err := o.organizationService.FindOrganizationByID(uint(orgID), uint(userID))
-	if err != nil {
-		logger.ErrorCtx(ctx, tag+"Failed to create sample with error: %v", err)
-		apihelper.AbortErrorHandleCustomMessage(ctx, http.StatusInternalServerError, err.Error())
+	res, errR := o.organizationService.FindOrganizationByID(uint(orgID), uint(userID))
+	if errR != nil {
+		logger.ErrorCtx(ctx, tag+"Failed to create sample with error: %v", errR)
+		apihelper.AbortErrorHandle(ctx, errR.ServiceCode)
 		return
 	}
 	apihelper.SuccessfulHandle(ctx, res)

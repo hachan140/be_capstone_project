@@ -8,7 +8,6 @@ import (
 	"be-capstone-project/src/internal/core/logger"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"net/http"
 )
 
 type AuthController struct {
@@ -32,10 +31,10 @@ func (a *AuthController) Signup(ctx *gin.Context) {
 		apihelper.AbortErrorHandleCustomMessage(ctx, common.ErrCodeInvalidRequest, err.Error())
 		return
 	}
-	err := a.userService.CreateUser(ctx, &req)
-	if err != nil {
-		logger.ErrorCtx(ctx, tag+"Failed to create sample with error: %v", err)
-		apihelper.AbortErrorHandleCustomMessage(ctx, http.StatusInternalServerError, err.Error())
+	errR := a.userService.CreateUser(ctx, &req)
+	if errR != nil {
+		logger.ErrorCtx(ctx, tag+"Failed to create sample with error: %v", errR)
+		apihelper.AbortErrorHandle(ctx, errR.ServiceCode)
 		return
 	}
 	apihelper.SuccessfulHandle(ctx, nil)
@@ -96,10 +95,10 @@ func (a *AuthController) SocialLogin(ctx *gin.Context) {
 		apihelper.AbortErrorHandleCustomMessage(ctx, common.ErrCodeInvalidRequest, err.Error())
 		return
 	}
-	res, err := a.userService.LoginSocial(ctx, &req)
-	if err != nil {
-		logger.ErrorCtx(ctx, tag+"Failed to login social with error: %v", err)
-		apihelper.AbortErrorHandleCustomMessage(ctx, http.StatusInternalServerError, err.Error())
+	res, errR := a.userService.LoginSocial(ctx, &req)
+	if errR != nil {
+		logger.ErrorCtx(ctx, tag+"Failed to login social with error: %v", errR)
+		apihelper.AbortErrorHandle(ctx, errR.ServiceCode)
 		return
 	}
 	apihelper.SuccessfulHandle(ctx, res)
@@ -118,10 +117,10 @@ func (a *AuthController) RefreshToken(ctx *gin.Context) {
 		apihelper.AbortErrorHandleCustomMessage(ctx, common.ErrCodeInvalidRequest, err.Error())
 		return
 	}
-	res, err := a.userService.RefreshToken(ctx, &req)
-	if err != nil {
-		logger.ErrorCtx(ctx, tag+"Failed to login social with error: %v", err)
-		apihelper.AbortErrorHandleCustomMessage(ctx, http.StatusInternalServerError, err.Error())
+	res, errR := a.userService.RefreshToken(ctx, &req)
+	if errR != nil {
+		logger.ErrorCtx(ctx, tag+"Failed to login social with error: %v", errR)
+		apihelper.AbortErrorHandle(ctx, errR.ServiceCode)
 		return
 	}
 	apihelper.SuccessfulHandle(ctx, res)
