@@ -67,14 +67,13 @@ func BootstrapAndRun() {
 	refreshTokenRepository := postgres.NewRefreshTokenRepository(postgresClient)
 	categoryRepository := postgres.NewCategoryRepository(postgresClient)
 	documentRepository := postgres.NewDocumentRepository(postgresClient)
-	multimediaRepository := postgres.NewMultiMediaRepository(postgresClient)
 
 	// Service layer
 	sampleService := services.NewSampleService(sampleRepository)
 	userService := services.NewUserService(userRepository, refreshTokenRepository, *cfg)
 	organizationService := services.NewOrganizationService(organizationRepositoy, userRepository, cfg.EmailConfig)
 	categoryService := services.NewCategoryService(categoryRepository, userRepository)
-	hyperDocumentService := services.NewHyperDocumentService(documentRepository, multimediaRepository)
+	hyperDocumentService := services.NewHyperDocumentService(documentRepository)
 
 	// Controller layer
 	sampleController := controller.NewSampleController(sampleService)
