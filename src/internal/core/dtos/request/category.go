@@ -10,6 +10,7 @@ type CreateCategoryRequest struct {
 	Description    string `json:"description"`
 	ParentID       uint   `json:"parent_id"`
 	OrganizationID uint   `json:"organization_id"`
+	DepartmentID   uint   `json:"department_id"`
 	CreatedBy      string `json:"created_by"`
 }
 

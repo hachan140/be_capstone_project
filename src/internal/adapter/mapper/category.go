@@ -15,6 +15,7 @@ func CategoryModelToDTO(model *model.Category) *dtos.Category {
 		Description:      model.Description,
 		ParentCategoryID: model.ParentCategoryID,
 		OrganizationID:   model.OrganizationID,
+		DepartmentID:     model.DepartmentID,
 		Status:           model.Status,
 		CreatedBy:        model.CreatedBy,
 		CreatedAt:        model.CreatedAt,

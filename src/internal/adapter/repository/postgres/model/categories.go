@@ -8,6 +8,7 @@ type Category struct {
 	Description      string
 	ParentCategoryID uint
 	OrganizationID   uint
+	DepartmentID     uint
 	Status           int
 	CreatedBy        string
 	CreatedAt        time.Time
