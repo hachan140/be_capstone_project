@@ -67,6 +67,7 @@ func RegisterGinRouters(
 	documentGroup.Use(middleware.ValidateToken(publicKey))
 	{
 		documentGroup.GET("", hyperDocumentController.FilterHyperDocument)
+		documentGroup.POST("/search/and-or-not", hyperDocumentController.SearchDocumentAndOrNot)
 	}
 	group := in.Group("/test")
 	{

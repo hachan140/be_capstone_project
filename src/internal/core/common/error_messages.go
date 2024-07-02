@@ -27,4 +27,7 @@ const (
 	ErrMessageCategoryExisted     = "Thư mục đã tồn tại"
 	ErrMessageInvalidCategoryName = "Tên thư mục không được trống"
 	ErrMessageInvalidStatus       = "Trạng thái không hợp lệ"
+
+	//document
+	ErrMessageDocumentNotFound = "Không tìm thấy tài liệu"
 )

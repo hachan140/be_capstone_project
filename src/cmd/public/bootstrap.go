@@ -67,6 +67,7 @@ func BootstrapAndRun() {
 	refreshTokenRepository := postgres.NewRefreshTokenRepository(postgresClient)
 	categoryRepository := postgres.NewCategoryRepository(postgresClient)
 	documentRepository := postgres.NewDocumentRepository(postgresClient)
+	privateDocumentRepository := postgres.NewPrivateDocumentRepository(postgresClient)
 
 	// Service layer
 	sampleService := services.NewSampleService(sampleRepository)
@@ -74,13 +75,14 @@ func BootstrapAndRun() {
 	organizationService := services.NewOrganizationService(organizationRepositoy, userRepository, cfg.EmailConfig)
 	categoryService := services.NewCategoryService(categoryRepository, userRepository)
 	hyperDocumentService := services.NewHyperDocumentService(documentRepository)
+	searchService := services.NewSearchService(privateDocumentRepository, documentRepository, userRepository)
 
 	// Controller layer
 	sampleController := controller.NewSampleController(sampleService)
 	authController := controller.NewAuthController(userService)
 	organizationController := controller.NewOrganizationController(organizationService)
 	categoryController := controller.NewCategoryController(categoryService)
-	hyperDocumentController := controller.NewHyperDocumentController(hyperDocumentService)
+	hyperDocumentController := controller.NewHyperDocumentController(hyperDocumentService, searchService)
 
 	engine := gin.New()
 	//Register middleware and router

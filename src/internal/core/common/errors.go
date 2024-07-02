@@ -120,6 +120,9 @@ const (
 	ErrCodeInvalidCategoryName       = 400021
 	ErrCodeInvalidStatus             = 400022
 	ErrCodeUserDoesNotHavePermission = 400023
+
+	//document
+	ErrCodeDocumentNotFound = 400100
 )
 
 // Error code 401XXX

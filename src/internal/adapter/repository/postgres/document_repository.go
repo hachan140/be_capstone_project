@@ -9,6 +9,8 @@ import (
 
 type IDocumentRepository interface {
 	FilterDocument(ctx context.Context, query string, params []interface{}, req request.HyperDocumentFilterParam) ([]*model.Document, error)
+	SearchDocumentTitles() ([]string, error)
+	GetDocumentByTitles(titles []string) ([]*model.Document, error)
 }
 
 type DocumentRepository struct {
@@ -30,6 +32,24 @@ func (d *DocumentRepository) FilterDocument(ctx context.Context, query string, p
 	params = append(params, (req.Page-1)*req.PageSize)
 	if err := d.storage.WithContext(ctx).Raw(sqlQuery, params...).Find(&documents); err.Error != nil {
 		return nil, err.Error
+	}
+	return documents, nil
+}
+
+func (d *DocumentRepository) SearchDocumentTitles() ([]string, error) {
+	var titles []string
+	err := d.storage.Raw("select title from documents ").Scan(&titles).Error
+	if err != nil {
+		return nil, err
+	}
+	return titles, nil
+}
+
+func (d *DocumentRepository) GetDocumentByTitles(titles []string) ([]*model.Document, error) {
+	var documents []*model.Document
+	err := d.storage.Raw("select * from documents where titles in ?", titles).Scan(&documents).Error
+	if err != nil {
+		return nil, err
 	}
 	return documents, nil
 }

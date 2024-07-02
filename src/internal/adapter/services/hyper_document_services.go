@@ -11,7 +11,7 @@ import (
 )
 
 type IHyperDocumentService interface {
-	FilterHyperDocument(ctx context.Context, req request.HyperDocumentFilterParam) ([]*dtos.HyperDocument, *common.ErrorCodeMessage)
+	FilterHyperDocument(ctx context.Context, req request.HyperDocumentFilterParam) ([]*dtos.Document, *common.ErrorCodeMessage)
 }
 
 type HyperDocumentService struct {
@@ -22,7 +22,7 @@ func NewHyperDocumentService(documentRepository postgres.IDocumentRepository) IH
 	return &HyperDocumentService{documentRepository: documentRepository}
 }
 
-func (h *HyperDocumentService) FilterHyperDocument(ctx context.Context, req request.HyperDocumentFilterParam) ([]*dtos.HyperDocument, *common.ErrorCodeMessage) {
+func (h *HyperDocumentService) FilterHyperDocument(ctx context.Context, req request.HyperDocumentFilterParam) ([]*dtos.Document, *common.ErrorCodeMessage) {
 	if req.Page <= 0 {
 		req.Page = 1
 	}
@@ -38,7 +38,7 @@ func (h *HyperDocumentService) FilterHyperDocument(ctx context.Context, req requ
 			Message:     err.Error(),
 		}
 	}
-	hyperDocuments := make([]*dtos.HyperDocument, 0)
+	hyperDocuments := make([]*dtos.Document, 0)
 	if documents != nil {
 		for _, d := range documents {
 			dDTO := mapper.DocumentToHyperDocumentDTO(d)
