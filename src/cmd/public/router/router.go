@@ -68,6 +68,7 @@ func RegisterGinRouters(
 	{
 		documentGroup.GET("", hyperDocumentController.FilterHyperDocument)
 		documentGroup.POST("/search/and-or-not", hyperDocumentController.SearchDocumentAndOrNot)
+		documentGroup.POST("search/keyword", hyperDocumentController.GetSearchHistoryKeywords)
 	}
 	group := in.Group("/test")
 	{

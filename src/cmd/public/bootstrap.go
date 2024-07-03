@@ -68,6 +68,7 @@ func BootstrapAndRun() {
 	categoryRepository := postgres.NewCategoryRepository(postgresClient)
 	documentRepository := postgres.NewDocumentRepository(postgresClient)
 	privateDocumentRepository := postgres.NewPrivateDocumentRepository(postgresClient)
+	searchHistoryRepository := postgres.NewSearchHistoryRepository(postgresClient)
 
 	// Service layer
 	sampleService := services.NewSampleService(sampleRepository)
@@ -75,7 +76,7 @@ func BootstrapAndRun() {
 	organizationService := services.NewOrganizationService(organizationRepositoy, userRepository, cfg.EmailConfig)
 	categoryService := services.NewCategoryService(categoryRepository, userRepository)
 	hyperDocumentService := services.NewHyperDocumentService(documentRepository)
-	searchService := services.NewSearchService(privateDocumentRepository, documentRepository, userRepository)
+	searchService := services.NewSearchService(privateDocumentRepository, documentRepository, userRepository, searchHistoryRepository)
 
 	// Controller layer
 	sampleController := controller.NewSampleController(sampleService)

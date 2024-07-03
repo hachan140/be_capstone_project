@@ -7,25 +7,30 @@ import (
 	"be-capstone-project/src/internal/core/common"
 	"be-capstone-project/src/internal/core/dtos"
 	"be-capstone-project/src/internal/core/dtos/request"
+	"be-capstone-project/src/internal/core/dtos/response"
 	"net/http"
 	"strings"
 )
 
 type ISearchService interface {
 	SearchDocumentAndOrNot(req *request.SearchAndOrNotRequest, userID uint) ([]*dtos.Document, *common.ErrorCodeMessage)
+	GetSearchKeywords(userID uint, req *request.SearchHistoryRequest) (*response.SearchHistoryResponse, *common.ErrorCodeMessage)
 }
 
 type SearchService struct {
-	privateDocRepo postgres.IPrivateDocumentRepository
-	documentRepo   postgres.IDocumentRepository
-	userRepository postgres.IUserRepository
+	privateDocRepo          postgres.IPrivateDocumentRepository
+	documentRepo            postgres.IDocumentRepository
+	userRepository          postgres.IUserRepository
+	searchHistoryRepository postgres.ISearchHistoryRepository
 }
 
-func NewSearchService(privateDoc postgres.IPrivateDocumentRepository, documentRepo postgres.IDocumentRepository, userRepo postgres.IUserRepository) ISearchService {
+func NewSearchService(privateDoc postgres.IPrivateDocumentRepository, documentRepo postgres.IDocumentRepository, userRepo postgres.IUserRepository,
+	searchHistoryRepo postgres.ISearchHistoryRepository) ISearchService {
 	return &SearchService{
-		privateDocRepo: privateDoc,
-		documentRepo:   documentRepo,
-		userRepository: userRepo,
+		privateDocRepo:          privateDoc,
+		documentRepo:            documentRepo,
+		userRepository:          userRepo,
+		searchHistoryRepository: searchHistoryRepo,
 	}
 }
 
@@ -146,4 +151,17 @@ func (s *SearchService) filterDocumentAccessType(userID uint, orgUserID uint, us
 		continue
 	}
 	return docRes
+}
+
+func (s *SearchService) GetSearchKeywords(userID uint, req *request.SearchHistoryRequest) (*response.SearchHistoryResponse, *common.ErrorCodeMessage) {
+	keywords, err := s.searchHistoryRepository.GetAllSearchHistoryPersonalize(userID, req.Keyword)
+	if err != nil {
+		return nil, &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusInternalServerError,
+			ServiceCode: common.ErrCodeInternalError,
+			Message:     err.Error(),
+		}
+	}
+	res := &response.SearchHistoryResponse{Keywords: keywords}
+	return res, nil
 }

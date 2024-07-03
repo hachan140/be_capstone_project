@@ -54,3 +54,22 @@ func (h *HyperDocumentController) SearchDocumentAndOrNot(ctx *gin.Context) {
 	}
 	apihelper.SuccessfulHandle(ctx, documents)
 }
+
+func (h *HyperDocumentController) GetSearchHistoryKeywords(ctx *gin.Context) {
+	tag := "[HyperDocumentController] "
+	userIDRaw, _ := ctx.Get("user_id")
+	userID, _ := strconv.ParseUint(userIDRaw.(string), 10, 32)
+	var req request.SearchHistoryRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		logger.Error(ctx, tag, err)
+		apihelper.AbortErrorHandle(ctx, common.ErrCodeInvalidRequest)
+		return
+	}
+	res, err := h.searchService.GetSearchKeywords(uint(userID), &req)
+	if err != nil {
+		logger.Error(ctx, tag, err)
+		apihelper.AbortErrorHandleCustomMessage(ctx, err.ServiceCode, err.Message)
+		return
+	}
+	apihelper.SuccessfulHandle(ctx, res)
+}
