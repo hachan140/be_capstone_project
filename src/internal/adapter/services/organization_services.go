@@ -22,8 +22,8 @@ type IOrganizationService interface {
 	UpdateOrganization(orgID uint, userID uint, req *request.UpdateOrganizationRequest) *common.ErrorCodeMessage
 	FindOrganizationByID(orgID uint, userID uint) (*dtos.Organization, *common.ErrorCodeMessage)
 	CheckUserRoleInOrganization(orgID uint, userID uint) (bool, error)
-	AddPeopleToOrganization(ctx context.Context, orgID uint, userID uint, emails []*string) ([]string, *common.ErrorCodeMessage)
-	AcceptOrganizationInvitation(orgID uint, userEmail string) *common.ErrorCodeMessage
+	AddPeopleToOrganization(ctx context.Context, orgID uint, userID uint, req *request.AddPeopleToOrganizationRequest) ([]string, *common.ErrorCodeMessage)
+	AcceptOrganizationInvitation(orgID uint, deptID uint, userEmail string) *common.ErrorCodeMessage
 }
 
 type OrganizationService struct {
@@ -215,7 +215,7 @@ func (o *OrganizationService) FindOrganizationByID(orgID uint, userID uint) (*dt
 	return orgDTO, nil
 }
 
-func (o *OrganizationService) AddPeopleToOrganization(ctx context.Context, orgID uint, userID uint, emails []*string) ([]string, *common.ErrorCodeMessage) {
+func (o *OrganizationService) AddPeopleToOrganization(ctx context.Context, orgID uint, userID uint, req *request.AddPeopleToOrganizationRequest) ([]string, *common.ErrorCodeMessage) {
 	org, err := o.organizationRepository.FindOrganizationByID(orgID)
 	if err != nil {
 		return nil, &common.ErrorCodeMessage{
@@ -239,7 +239,11 @@ func (o *OrganizationService) AddPeopleToOrganization(ctx context.Context, orgID
 			Message:     common.ErrMessageUserDoesNotHavePermission,
 		}
 	}
-	validEmails, err := o.userRepository.FindUsersNotInOrganization(emails)
+	emails := make([]*string, 0)
+	for _, u := range req.Users {
+		emails = append(emails, &u.Email)
+	}
+	validUsers, err := o.userRepository.FindUsersNotInOrganization(emails)
 	if err != nil {
 		return nil, &common.ErrorCodeMessage{
 			HTTPCode:    http.StatusInternalServerError,
@@ -247,15 +251,17 @@ func (o *OrganizationService) AddPeopleToOrganization(ctx context.Context, orgID
 			Message:     err.Error(),
 		}
 	}
-	for _, email := range validEmails {
-		if err := utils.SendOrganizationInvitation(orgID, org.Name, o.emailConfig.SenderEmail, o.emailConfig.SenderPassword, email); err != nil {
+	validEmails := make([]string, 0)
+	for _, u := range validUsers {
+		validEmails = append(validEmails, u.Email)
+		if err := utils.SendOrganizationInvitation(orgID, org.Name, o.emailConfig.SenderEmail, o.emailConfig.SenderPassword, u.DeptID, u.Email); err != nil {
 			logger.Error(ctx, err.Error())
 		}
 	}
 	return validEmails, nil
 }
 
-func (o *OrganizationService) AcceptOrganizationInvitation(orgID uint, userEmail string) *common.ErrorCodeMessage {
+func (o *OrganizationService) AcceptOrganizationInvitation(orgID uint, deptID uint, userEmail string) *common.ErrorCodeMessage {
 	org, err := o.organizationRepository.FindOrganizationByID(orgID)
 	if err != nil {
 		return &common.ErrorCodeMessage{
@@ -293,7 +299,7 @@ func (o *OrganizationService) AcceptOrganizationInvitation(orgID uint, userEmail
 			Message:     common.ErrMessageUserAlreadyInOtherOrganization,
 		}
 	}
-	if err := o.userRepository.AddPeopleOrganization(user.ID, orgID); err != nil {
+	if err := o.userRepository.AddPeopleOrganization(user.ID, orgID, deptID); err != nil {
 		return &common.ErrorCodeMessage{
 			HTTPCode:    http.StatusInternalServerError,
 			ServiceCode: common.ErrCodeInternalError,

@@ -10,11 +10,13 @@ import (
 	"be-capstone-project/src/internal/core/dtos/response"
 	"net/http"
 	"strings"
+	"time"
 )
 
 type ISearchService interface {
 	SearchDocumentAndOrNot(req *request.SearchAndOrNotRequest, userID uint) ([]*dtos.Document, *common.ErrorCodeMessage)
 	GetSearchKeywords(userID uint, req *request.SearchHistoryRequest) (*response.SearchHistoryResponse, *common.ErrorCodeMessage)
+	SaveSearchHistory(req *request.SaveSearchHistoryRequest) *common.ErrorCodeMessage
 }
 
 type SearchService struct {
@@ -164,4 +166,25 @@ func (s *SearchService) GetSearchKeywords(userID uint, req *request.SearchHistor
 	}
 	res := &response.SearchHistoryResponse{Keywords: keywords}
 	return res, nil
+}
+
+func (s *SearchService) SaveSearchHistory(req *request.SaveSearchHistoryRequest) *common.ErrorCodeMessage {
+	// keywords by trending
+	if req.Type == 2 {
+		req.UserID = 0
+	}
+	searchHistory := &model.SearchHistory{
+		UserID:    req.UserID,
+		Keywords:  req.Keyword,
+		CreatedAt: time.Now(),
+		Type:      req.Type,
+	}
+	if err := s.searchHistoryRepository.SaveSearchHistory(searchHistory); err != nil {
+		return &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusInternalServerError,
+			ServiceCode: common.ErrCodeInternalError,
+			Message:     err.Error(),
+		}
+	}
+	return nil
 }

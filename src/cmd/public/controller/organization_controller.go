@@ -126,7 +126,7 @@ func (o *OrganizationController) AddPeopleToOrganization(ctx *gin.Context) {
 		apihelper.AbortErrorHandle(ctx, common.ErrCodeInvalidRequest)
 		return
 	}
-	validEmails, errRes := o.organizationService.AddPeopleToOrganization(ctx, uint(orgID), uint(userID), req.Emails)
+	validEmails, errRes := o.organizationService.AddPeopleToOrganization(ctx, uint(orgID), uint(userID), &req)
 	if errRes != nil {
 		logger.Error(ctx, tag, err)
 		apihelper.AbortErrorHandleCustomMessage(ctx, errRes.ServiceCode, errRes.Message)
@@ -147,8 +147,15 @@ func (o *OrganizationController) AcceptOrganizationInvitation(ctx *gin.Context) 
 		apihelper.AbortErrorHandle(ctx, common.ErrCodeInvalidRequest)
 		return
 	}
+	deptIDRaw := ctx.Param("deptID")
+	deptID, err := strconv.ParseUint(deptIDRaw, 10, 32)
+	if err != nil {
+		logger.Error(ctx, tag, err)
+		apihelper.AbortErrorHandle(ctx, common.ErrCodeInvalidRequest)
+		return
+	}
 	userEmail := ctx.Param("userEmail")
-	if err := o.organizationService.AcceptOrganizationInvitation(uint(orgID), userEmail); err != nil {
+	if err := o.organizationService.AcceptOrganizationInvitation(uint(orgID), uint(deptID), userEmail); err != nil {
 		logger.Error(ctx, tag, err)
 		apihelper.AbortErrorHandleCustomMessage(ctx, err.ServiceCode, err.Message)
 		return

@@ -33,5 +33,10 @@ func (o *UpdateOrganizationRequest) Validate() error {
 }
 
 type AddPeopleToOrganizationRequest struct {
-	Emails []*string `json:"emails"`
+	Users []*UserInfo `json:"users"`
+}
+
+type UserInfo struct {
+	Email        string `json:"email"`
+	DepartmentID uint   `json:"department_id"`
 }

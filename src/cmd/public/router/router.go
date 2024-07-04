@@ -51,7 +51,7 @@ func RegisterGinRouters(
 	}
 	acceptInvitation := in.Group("/accept")
 	{
-		acceptInvitation.GET("/:orgID/user/:userEmail", organizationController.AcceptOrganizationInvitation)
+		acceptInvitation.GET("/:orgID/dept/:deptID/user/:userEmail", organizationController.AcceptOrganizationInvitation)
 	}
 
 	categoryGroup := in.Group("/category")
@@ -68,7 +68,8 @@ func RegisterGinRouters(
 	{
 		documentGroup.GET("", hyperDocumentController.FilterHyperDocument)
 		documentGroup.POST("/search/and-or-not", hyperDocumentController.SearchDocumentAndOrNot)
-		documentGroup.POST("search/keyword", hyperDocumentController.GetSearchHistoryKeywords)
+		documentGroup.POST("/search/keyword", hyperDocumentController.GetSearchHistoryKeywords)
+		documentGroup.POST("/search-history", hyperDocumentController.SaveSearchHistory)
 	}
 	group := in.Group("/test")
 	{

@@ -14,8 +14,8 @@ type IUserRepository interface {
 	UpdateUserOrganizationRole(userID uint, orgID uint, isOrgManager bool) error
 	UpdateUserSocial(userID uint) error
 	FindUsersInOrganization(emails []*string) ([]string, error)
-	FindUsersNotInOrganization(emails []*string) ([]string, error)
-	AddPeopleOrganization(userID uint, orgID uint) error
+	FindUsersNotInOrganization(emails []*string) ([]*model.User, error)
+	AddPeopleOrganization(userID uint, orgID uint, deptID uint) error
 	ResetPassword(userID uint, password string) error
 	UpdateUserStatus(userID uint, status int) error
 }
@@ -72,13 +72,13 @@ func (u *UserRepository) FindUsersInOrganization(emails []*string) ([]string, er
 	return emailExisted, nil
 }
 
-func (u *UserRepository) FindUsersNotInOrganization(emails []*string) ([]string, error) {
-	var emailNotExisted []string
-	result := u.storage.Raw("select email from users u where email in ? and organization_id = 0", emails).Scan(&emailNotExisted)
+func (u *UserRepository) FindUsersNotInOrganization(emails []*string) ([]*model.User, error) {
+	var users []*model.User
+	result := u.storage.Raw("select * from users u where email in ? and organization_id = 0", emails).Scan(&users)
 	if result.Error != nil {
 		return nil, result.Error
 	}
-	return emailNotExisted, nil
+	return users, nil
 
 }
 
@@ -99,8 +99,8 @@ func (u *UserRepository) UpdateUserSocial(userID uint) error {
 
 }
 
-func (u *UserRepository) AddPeopleOrganization(userID uint, orgID uint) error {
-	err := u.storage.Exec("update users set organization_id = ? where id = ?", orgID, userID).Error
+func (u *UserRepository) AddPeopleOrganization(userID uint, orgID uint, deptID uint) error {
+	err := u.storage.Exec("update users set organization_id = ?, dept_id = ? where id = ?", orgID, deptID, userID).Error
 	if err != nil {
 		return err
 	}
