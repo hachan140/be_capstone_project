@@ -20,7 +20,7 @@ func NewSearchHistoryRepository(storage *storage.Database) ISearchHistoryReposit
 
 func (s *SearchHistoryRepository) GetAllSearchHistoryPersonalize(userID uint, input string) ([]string, error) {
 	var keywords []string
-	err := s.storage.Raw("select keywords from search_history where (user_id = ? or user_id = 0) and keywords like ?", userID, "%"+input+"%").Scan(&keywords).Error
+	err := s.storage.Raw("select keywords from search_histories where (user_id = ? or user_id = 0) and keywords like ?", userID, "%"+input+"%").Scan(&keywords).Error
 	if err != nil {
 		return nil, err
 	}
