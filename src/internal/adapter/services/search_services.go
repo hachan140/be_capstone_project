@@ -67,6 +67,13 @@ func (s *SearchService) SearchDocumentAndOrNot(req *request.SearchAndOrNotReques
 			results = append(results, title)
 		}
 	}
+	if results == nil {
+		return nil, &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusBadRequest,
+			ServiceCode: common.ErrCodeDocumentNotFound,
+			Message:     common.ErrMessageDocumentNotFound,
+		}
+	}
 	documents, err := s.documentRepo.GetDocumentByTitles(results)
 	if err != nil {
 		return nil, &common.ErrorCodeMessage{
@@ -125,6 +132,7 @@ func (s *SearchService) filterDocumentAccessType(userID uint, orgUserID uint, us
 	for _, d := range documents {
 		if d.AccessType == 1 {
 			docRes = append(docRes, d)
+			continue
 		}
 		if d.OrganizationID == orgUserID {
 			switch d.AccessType {
@@ -132,12 +140,12 @@ func (s *SearchService) filterDocumentAccessType(userID uint, orgUserID uint, us
 				if d.OrganizationID != 0 {
 					docRes = append(docRes, d)
 				}
-
+				break
 			case 3:
 				if d.OrganizationID != 0 && d.DeptID != 0 && d.DeptID == userDeptID {
 					docRes = append(docRes, d)
 				}
-
+				break
 			case 4:
 				doc, err := s.privateDocRepo.GetPrivateDocument(userID, d.ID)
 				if err != nil {
@@ -146,6 +154,7 @@ func (s *SearchService) filterDocumentAccessType(userID uint, orgUserID uint, us
 				if doc != nil {
 					docRes = append(docRes, d)
 				}
+				break
 			default:
 				return nil
 			}

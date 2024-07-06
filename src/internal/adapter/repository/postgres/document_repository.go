@@ -47,7 +47,7 @@ func (d *DocumentRepository) SearchDocumentTitles() ([]string, error) {
 
 func (d *DocumentRepository) GetDocumentByTitles(titles []string) ([]*model.Document, error) {
 	var documents []*model.Document
-	err := d.storage.Raw("select * from documents where titles in ?", titles).Scan(&documents).Error
+	err := d.storage.Raw("select * from documents where title in ?", titles).Scan(&documents).Error
 	if err != nil {
 		return nil, err
 	}

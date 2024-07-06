@@ -25,6 +25,9 @@ func DocumentToHyperDocumentDTO(document *model.Document) *dtos.Document {
 }
 
 func DocumentsToHyperDocumentDTOs(document []*model.Document) []*dtos.Document {
+	if document == nil {
+		return nil
+	}
 	documentRes := make([]*dtos.Document, 0)
 	for _, document := range document {
 		dRes := &dtos.Document{
