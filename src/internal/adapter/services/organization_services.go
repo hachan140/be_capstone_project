@@ -24,6 +24,7 @@ type IOrganizationService interface {
 	CheckUserRoleInOrganization(orgID uint, userID uint) (bool, error)
 	AddPeopleToOrganization(ctx context.Context, orgID uint, userID uint, req *request.AddPeopleToOrganizationRequest) ([]string, *common.ErrorCodeMessage)
 	AcceptOrganizationInvitation(orgID uint, deptID uint, userEmail string) *common.ErrorCodeMessage
+	AssignPeopleTobeManager(ctx context.Context, orgID uint, userID uint, req *request.AssignPeopleToManagerRequest) *common.ErrorCodeMessage
 }
 
 type OrganizationService struct {
@@ -259,6 +260,56 @@ func (o *OrganizationService) AddPeopleToOrganization(ctx context.Context, orgID
 		}
 	}
 	return validEmails, nil
+}
+
+func (o *OrganizationService) AssignPeopleTobeManager(ctx context.Context, orgID uint, userID uint, req *request.AssignPeopleToManagerRequest) *common.ErrorCodeMessage {
+	org, err := o.organizationRepository.FindOrganizationByID(orgID)
+	if err != nil {
+		return &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusInternalServerError,
+			ServiceCode: common.ErrCodeInternalError,
+			Message:     err.Error(),
+		}
+	}
+	if org == nil {
+		return &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusBadRequest,
+			ServiceCode: common.ErrCodeOrganizationNotExist,
+			Message:     common.ErrMessageOrganizationNotExist,
+		}
+	}
+	isManager, _ := o.CheckUserRoleInOrganization(orgID, userID)
+	if !isManager {
+		return &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusBadRequest,
+			ServiceCode: common.ErrCodeUserDoesNotHavePermission,
+			Message:     common.ErrMessageUserDoesNotHavePermission,
+		}
+	}
+	validUser, err := o.userRepository.FindUserInOrganization(req.Email, orgID)
+	if err != nil {
+		return &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusInternalServerError,
+			ServiceCode: common.ErrCodeInternalError,
+			Message:     err.Error(),
+		}
+	}
+	if validUser == nil {
+		return &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusBadRequest,
+			ServiceCode: common.ErrCodeUserNotInOrganization,
+			Message:     common.ErrMessageUserNotInOrganization,
+		}
+	}
+	if err := o.userRepository.UpdateUserRoleManager(validUser.ID); err != nil {
+		return &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusInternalServerError,
+			ServiceCode: common.ErrCodeInternalError,
+			Message:     err.Error(),
+		}
+	}
+	// TODO: send email or send noti to assigned people
+	return nil
 }
 
 func (o *OrganizationService) AcceptOrganizationInvitation(orgID uint, deptID uint, userEmail string) *common.ErrorCodeMessage {

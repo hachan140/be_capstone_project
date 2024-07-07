@@ -11,6 +11,7 @@ type ICategoryRepository interface {
 	ListCategoryByOrganization(orgID uint, limit int, offset int) ([]*model.Category, error)
 	FindCategoryByID(catID uint) (*model.Category, error)
 	FindCategoryByName(name string) (*model.Category, error)
+	FindCategoryByNameLike(name string, deptID uint) ([]*model.Category, error)
 }
 
 type CategoryRepository struct {
@@ -62,4 +63,13 @@ func (c *CategoryRepository) FindCategoryByName(name string) (*model.Category, e
 		return nil, err
 	}
 	return category, nil
+}
+
+func (c *CategoryRepository) FindCategoryByNameLike(name string, deptID uint) ([]*model.Category, error) {
+	categories := make([]*model.Category, 0)
+	err := c.storage.Raw("select * from categories where name like ? and department_id = ?", "%"+name+"%", deptID).Scan(&categories).Error
+	if err != nil {
+		return nil, err
+	}
+	return categories, nil
 }

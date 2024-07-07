@@ -17,6 +17,7 @@ type ICategoryService interface {
 	ListCategories(ctx context.Context, orgID uint, userID uint, req *request.GetListCategoryRequest) ([]*dtos.Category, *common.ErrorCodeMessage)
 	GetCategoryByID(ctx context.Context, id uint, userID uint) (*dtos.Category, *common.ErrorCodeMessage)
 	UpdateCategoryByID(ctx context.Context, userID uint, catID uint, req *request.UpdateCategoryRequest) *common.ErrorCodeMessage
+	SearchCategoryByName(ctx context.Context, name string, userID uint, deptID uint) ([]*dtos.Category, *common.ErrorCodeMessage)
 }
 
 type CategoryService struct {
@@ -163,6 +164,28 @@ func (c *CategoryService) GetCategoryByID(ctx context.Context, id uint, userID u
 		}
 	}
 	return mapper.CategoryModelToDTO(cat), nil
+}
+
+func (c *CategoryService) SearchCategoryByName(ctx context.Context, name string, userID uint, deptID uint) ([]*dtos.Category, *common.ErrorCodeMessage) {
+	if deptID == 0 {
+		return nil, nil
+	}
+	cat, err := c.categoryRepo.FindCategoryByNameLike(name, deptID)
+	if err != nil {
+		return nil, &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusInternalServerError,
+			ServiceCode: common.ErrCodeInternalError,
+			Message:     err.Error(),
+		}
+	}
+	if cat == nil {
+		return nil, &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusBadRequest,
+			ServiceCode: common.ErrCodeCategoryNotFound,
+			Message:     common.ErrMessageCategoryNotFound,
+		}
+	}
+	return mapper.CategoriesModelToDTO(cat), nil
 }
 
 func (c *CategoryService) UpdateCategoryByID(ctx context.Context, userID uint, catID uint, req *request.UpdateCategoryRequest) *common.ErrorCodeMessage {

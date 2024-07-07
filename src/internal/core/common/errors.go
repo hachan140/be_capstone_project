@@ -123,6 +123,9 @@ const (
 
 	//document
 	ErrCodeDocumentNotFound = 400100
+
+	//user
+	ErrCodeUserNotInOrganization = 400200
 )
 
 // Error code 401XXX

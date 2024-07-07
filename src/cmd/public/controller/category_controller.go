@@ -103,8 +103,8 @@ func (c *CategoryController) ViewCategoryByID(ctx *gin.Context) {
 
 	res, errG := c.categoryService.GetCategoryByID(ctx, uint(catID), uint(userID))
 	if errG != nil {
-		logger.ErrorCtx(ctx, tag+"Failed to get category with error: %v", err)
-		apihelper.AbortErrorHandle(ctx, errG.ServiceCode)
+		logger.ErrorCtx(ctx, tag+"Failed to get category with error: %v", errG)
+		apihelper.AbortErrorHandleCustomMessage(ctx, errG.ServiceCode, errG.Message)
 		return
 	}
 	apihelper.SuccessfulHandle(ctx, res)
@@ -132,6 +132,28 @@ func (c *CategoryController) ViewListCategoryByOrganization(ctx *gin.Context) {
 	if errR != nil {
 		logger.ErrorCtx(ctx, tag+"Failed to get list categories with error: %v", errR)
 		apihelper.AbortErrorHandleCustomMessage(ctx, errR.ServiceCode, errR.Message)
+		return
+	}
+	apihelper.SuccessfulHandle(ctx, res)
+	return
+}
+
+func (c *CategoryController) ViewCategoryByNameLike(ctx *gin.Context) {
+	tag := "[ViewCategoryController] "
+	userIDRaw, _ := ctx.Get("user_id")
+	userID, _ := strconv.ParseUint(userIDRaw.(string), 10, 32)
+	deptIDRaw, _ := ctx.Get("dept_id")
+	deptID, _ := strconv.ParseUint(deptIDRaw.(string), 10, 32)
+	req := request.SearchCategoryByNameRequest{}
+	if err := ctx.ShouldBindQuery(&req); err != nil {
+		logger.Error(ctx, tag, err)
+		apihelper.AbortErrorHandle(ctx, common.ErrCodeInvalidRequest)
+		return
+	}
+	res, errG := c.categoryService.SearchCategoryByName(ctx, req.Name, uint(userID), uint(deptID))
+	if errG != nil {
+		logger.ErrorCtx(ctx, tag+"Failed to get category with error: %v", errG.Message)
+		apihelper.AbortErrorHandleCustomMessage(ctx, errG.ServiceCode, errG.Message)
 		return
 	}
 	apihelper.SuccessfulHandle(ctx, res)

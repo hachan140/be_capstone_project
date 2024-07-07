@@ -30,4 +30,7 @@ const (
 
 	//document
 	ErrMessageDocumentNotFound = "Không tìm thấy tài liệu"
+
+	//user
+	ErrMessageUserNotInOrganization = "Người dùng không thuộc tổ chức"
 )

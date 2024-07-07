@@ -162,3 +162,22 @@ func (o *OrganizationController) AcceptOrganizationInvitation(ctx *gin.Context) 
 	}
 	apihelper.SuccessfulHandle(ctx, nil)
 }
+
+func (o *OrganizationController) AssignPeopleToManager(ctx *gin.Context) {
+	tag := "[AssignPeopleToManager] "
+	userIDRaw, _ := ctx.Get("user_id")
+	userID, _ := strconv.ParseUint(userIDRaw.(string), 10, 32)
+	var req request.AssignPeopleToManagerRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		logger.Error(ctx, tag, err)
+		apihelper.AbortErrorHandle(ctx, common.ErrCodeInvalidRequest)
+		return
+	}
+	errRes := o.organizationService.AssignPeopleTobeManager(ctx, req.OrgID, uint(userID), &req)
+	if errRes != nil {
+		logger.Error(ctx, tag, errRes)
+		apihelper.AbortErrorHandleCustomMessage(ctx, errRes.ServiceCode, errRes.Message)
+		return
+	}
+	apihelper.SuccessfulHandle(ctx, nil)
+}
