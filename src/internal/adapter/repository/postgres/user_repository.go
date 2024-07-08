@@ -76,7 +76,7 @@ func (u *UserRepository) FindUsersInOrganization(emails []*string) ([]string, er
 
 func (u *UserRepository) FindUsersNotInOrganization(emails []*string) ([]*model.User, error) {
 	var users []*model.User
-	result := u.storage.Raw("select * from users u where email in ? and organization_id = 0", emails).Scan(&users)
+	result := u.storage.Raw("select * from users u where email in ? and organization_id = 0 and status = 1", emails).Scan(&users)
 	if result.Error != nil {
 		return nil, result.Error
 	}

@@ -242,8 +242,10 @@ func (o *OrganizationService) AddPeopleToOrganization(ctx context.Context, orgID
 		}
 	}
 	emails := make([]*string, 0)
+	mapEmailDept := make(map[string]uint, 0)
 	for _, u := range req.Users {
 		emails = append(emails, &u.Email)
+		mapEmailDept[u.Email] = u.DepartmentID
 	}
 	validUsers, err := o.userRepository.FindUsersNotInOrganization(emails)
 	if err != nil {
@@ -253,10 +255,17 @@ func (o *OrganizationService) AddPeopleToOrganization(ctx context.Context, orgID
 			Message:     err.Error(),
 		}
 	}
+	if validUsers == nil {
+		return nil, &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusBadRequest,
+			ServiceCode: common.ErrCodeInvalidUser,
+			Message:     common.ErrMessageInvalidRequest,
+		}
+	}
 	validEmails := make([]string, 0)
 	for _, u := range validUsers {
 		validEmails = append(validEmails, u.Email)
-		if err := utils.SendOrganizationInvitation(orgID, org.Name, o.emailConfig.SenderEmail, o.emailConfig.SenderPassword, u.DeptID, u.Email); err != nil {
+		if err := utils.SendOrganizationInvitation(orgID, org.Name, o.emailConfig.SenderEmail, o.emailConfig.SenderPassword, mapEmailDept[u.Email], u.Email); err != nil {
 			logger.Error(ctx, err.Error())
 		}
 	}
