@@ -302,6 +302,13 @@ func (o *OrganizationService) AssignPeopleTobeManager(ctx context.Context, orgID
 			Message:     common.ErrMessageUserNotInOrganization,
 		}
 	}
+	if validUser.Status != 1 {
+		return &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusBadRequest,
+			ServiceCode: common.ErrCodeUserIsInactive,
+			Message:     common.ErrMessageUserIsInactive,
+		}
+	}
 	if err := o.userRepository.UpdateUserRoleManager(validUser.ID); err != nil {
 		return &common.ErrorCodeMessage{
 			HTTPCode:    http.StatusInternalServerError,

@@ -48,7 +48,7 @@ func RegisterGinRouters(
 		organizationGroup.GET("/:id", organizationController.ViewOrganization)
 		organizationGroup.PATCH("/:id", organizationController.UpdateOrganization)
 		organizationGroup.POST("/:id/add-people", organizationController.AddPeopleToOrganization)
-		organizationGroup.POST("/manager/assign", organizationController.AssignPeopleToManager)
+		organizationGroup.POST("/:id/assign-manager", organizationController.AssignPeopleToManager)
 	}
 	acceptInvitation := in.Group("/accept")
 	{
@@ -62,9 +62,13 @@ func RegisterGinRouters(
 		categoryGroup.GET("/:id", categoryController.ViewCategoryByID)
 		categoryGroup.PATCH("/:id", categoryController.UpdateCategory)
 		categoryGroup.GET("/organization/:id", categoryController.ViewListCategoryByOrganization)
-		categoryGroup.GET("/department/:id/by-name", categoryController.ViewCategoryByNameLike)
 	}
 
+	departmentGroup := in.Group("/department")
+	departmentGroup.Use(middleware.ValidateToken(publicKey))
+	{
+		departmentGroup.GET("/:id/category/by-name", categoryController.ViewCategoryByNameLike)
+	}
 	documentGroup := in.Group("/document")
 	documentGroup.Use(middleware.ValidateToken(publicKey))
 	{

@@ -9,6 +9,7 @@ import (
 	"be-capstone-project/src/internal/core/dtos/request"
 	"context"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -170,6 +171,7 @@ func (c *CategoryService) SearchCategoryByName(ctx context.Context, name string,
 	if deptID == 0 {
 		return nil, nil
 	}
+	name = strings.ToLower(name)
 	cat, err := c.categoryRepo.FindCategoryByNameLike(name, deptID)
 	if err != nil {
 		return nil, &common.ErrorCodeMessage{

@@ -33,4 +33,5 @@ const (
 
 	//user
 	ErrMessageUserNotInOrganization = "Người dùng không thuộc tổ chức"
+	ErrMessageUserIsInactive        = "Người dùng không hoạt động"
 )

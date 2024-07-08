@@ -126,6 +126,7 @@ const (
 
 	//user
 	ErrCodeUserNotInOrganization = 400200
+	ErrCodeUserIsInactive        = 400201
 )
 
 // Error code 401XXX

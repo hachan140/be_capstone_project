@@ -142,8 +142,8 @@ func (c *CategoryController) ViewCategoryByNameLike(ctx *gin.Context) {
 	tag := "[ViewCategoryController] "
 	userIDRaw, _ := ctx.Get("user_id")
 	userID, _ := strconv.ParseUint(userIDRaw.(string), 10, 32)
-	deptIDRaw, _ := ctx.Get("dept_id")
-	deptID, _ := strconv.ParseUint(deptIDRaw.(string), 10, 32)
+	deptIDRaw := ctx.Param("id")
+	deptID, _ := strconv.ParseUint(deptIDRaw, 10, 32)
 	req := request.SearchCategoryByNameRequest{}
 	if err := ctx.ShouldBindQuery(&req); err != nil {
 		logger.Error(ctx, tag, err)

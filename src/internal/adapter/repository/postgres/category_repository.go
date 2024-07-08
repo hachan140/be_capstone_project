@@ -67,7 +67,7 @@ func (c *CategoryRepository) FindCategoryByName(name string) (*model.Category, e
 
 func (c *CategoryRepository) FindCategoryByNameLike(name string, deptID uint) ([]*model.Category, error) {
 	categories := make([]*model.Category, 0)
-	err := c.storage.Raw("select * from categories where name like ? and department_id = ?", "%"+name+"%", deptID).Scan(&categories).Error
+	err := c.storage.Raw("select * from categories where lower(name) like ? and department_id = ?", "%"+name+"%", deptID).Scan(&categories).Error
 	if err != nil {
 		return nil, err
 	}
