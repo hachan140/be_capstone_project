@@ -22,8 +22,8 @@ type VerifyEmail struct {
 	VerifyLink string
 }
 
-func SendOrganizationInvitation(orgID uint, organizationName string, sender string, senderPassword string, deptID uint, receiver string) error {
-	joinLink := fmt.Sprintf("%s/accept/%d/dept/%d/user/%s", "http://35.197.136.79:8080", orgID, deptID, receiver)
+func SendOrganizationInvitation(domain string, orgID uint, organizationName string, sender string, senderPassword string, deptID uint, receiver string) error {
+	joinLink := fmt.Sprintf("%s/accept/%d/dept/%d/user/%s", domain, orgID, deptID, receiver)
 	fmt.Println("joinLink: " + joinLink)
 	emailData := EmailData{
 		OrganizationName: organizationName,

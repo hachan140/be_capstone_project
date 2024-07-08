@@ -50,6 +50,7 @@ type TokenConfig struct {
 }
 
 type EmailConfig struct {
+	Domain         string `envconfig:"GO_DOMAIN"`
 	AcceptURL      string `envconfig:"ACCEPT_URL"`
 	SenderEmail    string `envconfig:"SENDER_EMAIL"`
 	SenderPassword string `envconfig:"SENDER_PASSWORD"`

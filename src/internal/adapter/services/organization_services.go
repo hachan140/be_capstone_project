@@ -265,7 +265,7 @@ func (o *OrganizationService) AddPeopleToOrganization(ctx context.Context, orgID
 	validEmails := make([]string, 0)
 	for _, u := range validUsers {
 		validEmails = append(validEmails, u.Email)
-		if err := utils.SendOrganizationInvitation(orgID, org.Name, o.emailConfig.SenderEmail, o.emailConfig.SenderPassword, mapEmailDept[u.Email], u.Email); err != nil {
+		if err := utils.SendOrganizationInvitation(o.emailConfig.Domain, orgID, org.Name, o.emailConfig.SenderEmail, o.emailConfig.SenderPassword, mapEmailDept[u.Email], u.Email); err != nil {
 			logger.Error(ctx, err.Error())
 		}
 	}
