@@ -93,6 +93,7 @@ func (o *OrganizationService) CreateOrganization(userId uint, req *request.Creat
 		CreatedAt:   time.Now(),
 		CreatedBy:   req.CreatedBy,
 		Status:      0,
+		LimitData:   common.LIMIT_DATA,
 	}
 	if err := o.organizationRepository.CreateOrganization(orgModel); err != nil {
 		return &common.ErrorCodeMessage{

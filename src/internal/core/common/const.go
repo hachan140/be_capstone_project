@@ -165,3 +165,8 @@ var UserStatusMap = map[string]bool{
 const (
 	UserMobileType = "MOBILE"
 )
+
+// organization
+const (
+	LIMIT_DATA = 10737418240
+)
