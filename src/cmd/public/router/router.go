@@ -61,13 +61,14 @@ func RegisterGinRouters(
 		categoryGroup.POST("", categoryController.CreateCategory)
 		categoryGroup.GET("/:id", categoryController.ViewCategoryByID)
 		categoryGroup.PATCH("/:id", categoryController.UpdateCategory)
-		categoryGroup.GET("/organization/:id", categoryController.ViewListCategoryByOrganization)
+		//categoryGroup.GET("/organization/:id", categoryController.ViewListCategoryByOrganization)
 	}
 
 	departmentGroup := in.Group("/department")
 	departmentGroup.Use(middleware.ValidateToken(publicKey))
 	{
 		departmentGroup.GET("/:id/category/by-name", categoryController.ViewCategoryByNameLike)
+		departmentGroup.GET("/:id/category", categoryController.ViewListCategoryByDepartment)
 	}
 	documentGroup := in.Group("/document")
 	documentGroup.Use(middleware.ValidateToken(publicKey))

@@ -89,7 +89,7 @@ func (c *CategoryService) CreateCategory(ctx context.Context, userID uint, req *
 	return nil
 }
 
-func (c *CategoryService) ListCategories(ctx context.Context, orgID uint, userID uint, req *request.GetListCategoryRequest) ([]*dtos.Category, *common.ErrorCodeMessage) {
+func (c *CategoryService) ListCategories(ctx context.Context, depID uint, userID uint, req *request.GetListCategoryRequest) ([]*dtos.Category, *common.ErrorCodeMessage) {
 	user, err := c.userRepository.FinduserByID(userID)
 	if err != nil {
 		return nil, &common.ErrorCodeMessage{
@@ -98,13 +98,16 @@ func (c *CategoryService) ListCategories(ctx context.Context, orgID uint, userID
 			Message:     err.Error(),
 		}
 	}
-	if user.OrganizationID != 0 && user.OrganizationID != orgID {
-		return nil, &common.ErrorCodeMessage{
-			HTTPCode:    http.StatusBadRequest,
-			ServiceCode: common.ErrCodeUserAlreadyInOtherOrganization,
-			Message:     common.ErrMessageUserAlreadyInOtherOrganization,
+	if !user.IsOrganizationManager {
+		if user.OrganizationID != 0 && user.DeptID != depID {
+			return nil, &common.ErrorCodeMessage{
+				HTTPCode:    http.StatusBadRequest,
+				ServiceCode: common.ErrCodeUserAlreadyInOtherOrganization,
+				Message:     common.ErrMessageUserAlreadyInOtherOrganization,
+			}
 		}
 	}
+
 	if req.Page <= 0 {
 		req.Page = 1
 	}
@@ -112,7 +115,7 @@ func (c *CategoryService) ListCategories(ctx context.Context, orgID uint, userID
 		req.PageSize = 10
 	}
 	offset := (req.Page - 1) * req.PageSize
-	categories, err := c.categoryRepo.ListCategoryByOrganization(orgID, req.PageSize, offset)
+	categories, err := c.categoryRepo.ListCategoryByDepartment(depID, req.PageSize, offset)
 	if err != nil {
 		return nil, &common.ErrorCodeMessage{
 			HTTPCode:    http.StatusInternalServerError,

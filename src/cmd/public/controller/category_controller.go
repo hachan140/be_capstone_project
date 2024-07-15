@@ -111,7 +111,7 @@ func (c *CategoryController) ViewCategoryByID(ctx *gin.Context) {
 	return
 }
 
-func (c *CategoryController) ViewListCategoryByOrganization(ctx *gin.Context) {
+func (c *CategoryController) ViewListCategoryByDepartment(ctx *gin.Context) {
 	tag := "[ViewCategoryController] "
 	userIDRaw, _ := ctx.Get("user_id")
 	userID, _ := strconv.ParseUint(userIDRaw.(string), 10, 32)

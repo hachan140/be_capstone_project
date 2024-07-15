@@ -8,7 +8,7 @@ import (
 type ICategoryRepository interface {
 	CreateCategory(category *model.Category) error
 	UpdateCategory(category *model.Category) error
-	ListCategoryByOrganization(orgID uint, limit int, offset int) ([]*model.Category, error)
+	ListCategoryByDepartment(orgID uint, limit int, offset int) ([]*model.Category, error)
 	FindCategoryByID(catID uint) (*model.Category, error)
 	FindCategoryByName(name string) (*model.Category, error)
 	FindCategoryByNameLike(name string, deptID uint) ([]*model.Category, error)
@@ -38,9 +38,9 @@ func (c *CategoryRepository) UpdateCategory(category *model.Category) error {
 	return nil
 }
 
-func (c *CategoryRepository) ListCategoryByOrganization(orgID uint, limit int, offset int) ([]*model.Category, error) {
+func (c *CategoryRepository) ListCategoryByDepartment(orgID uint, limit int, offset int) ([]*model.Category, error) {
 	var categories []*model.Category
-	err := c.storage.Raw("select * from categories where organization_id = ? order by created_at desc limit ? offset ?", orgID, limit, offset).Scan(&categories).Error
+	err := c.storage.Raw("select * from categories where department_id = ? order by created_at desc limit ? offset ?", orgID, limit, offset).Scan(&categories).Error
 	if err != nil {
 		return nil, err
 	}
