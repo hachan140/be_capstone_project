@@ -49,6 +49,7 @@ func RegisterGinRouters(
 		organizationGroup.PATCH("/:id", organizationController.UpdateOrganization)
 		organizationGroup.POST("/:id/add-people", organizationController.AddPeopleToOrganization)
 		organizationGroup.POST("/:id/assign-manager", organizationController.AssignPeopleToManager)
+		organizationGroup.POST("/:id/recall-manager", organizationController.RecallPeopleToManager)
 	}
 	acceptInvitation := in.Group("/accept")
 	{

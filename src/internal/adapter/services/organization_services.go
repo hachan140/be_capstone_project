@@ -25,6 +25,7 @@ type IOrganizationService interface {
 	AddPeopleToOrganization(ctx context.Context, orgID uint, userID uint, req *request.AddPeopleToOrganizationRequest) ([]string, *common.ErrorCodeMessage)
 	AcceptOrganizationInvitation(orgID uint, deptID uint, userEmail string) *common.ErrorCodeMessage
 	AssignPeopleTobeManager(ctx context.Context, orgID uint, userID uint, req *request.AssignPeopleToManagerRequest) *common.ErrorCodeMessage
+	RecallPeopleTobeManager(ctx context.Context, orgID uint, userID uint, req *request.RecallPeopleManagerRequest) *common.ErrorCodeMessage
 }
 
 type OrganizationService struct {
@@ -318,7 +319,71 @@ func (o *OrganizationService) AssignPeopleTobeManager(ctx context.Context, orgID
 			Message:     common.ErrMessageUserIsInactive,
 		}
 	}
-	if err := o.userRepository.UpdateUserRoleManager(validUser.ID); err != nil {
+	if err := o.userRepository.UpdateUserRoleManager(validUser.ID, true); err != nil {
+		return &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusInternalServerError,
+			ServiceCode: common.ErrCodeInternalError,
+			Message:     err.Error(),
+		}
+	}
+	// TODO: send email or send noti to assigned people
+	return nil
+}
+
+func (o *OrganizationService) RecallPeopleTobeManager(ctx context.Context, orgID uint, userID uint, req *request.RecallPeopleManagerRequest) *common.ErrorCodeMessage {
+	org, err := o.organizationRepository.FindOrganizationByID(orgID)
+	if err != nil {
+		return &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusInternalServerError,
+			ServiceCode: common.ErrCodeInternalError,
+			Message:     err.Error(),
+		}
+	}
+	if org == nil {
+		return &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusBadRequest,
+			ServiceCode: common.ErrCodeOrganizationNotExist,
+			Message:     common.ErrMessageOrganizationNotExist,
+		}
+	}
+	user, err := o.userRepository.FinduserByID(userID)
+	if err != nil {
+		return &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusInternalServerError,
+			ServiceCode: common.ErrCodeInternalError,
+			Message:     err.Error(),
+		}
+	}
+	if user.Email != org.CreatedBy {
+		return &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusBadRequest,
+			ServiceCode: common.ErrCodeUserDoesNotHavePermission,
+			Message:     common.ErrMessageUserDoesNotHavePermission,
+		}
+	}
+	validUser, err := o.userRepository.FindUserInOrganization(req.Email, orgID)
+	if err != nil {
+		return &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusInternalServerError,
+			ServiceCode: common.ErrCodeInternalError,
+			Message:     err.Error(),
+		}
+	}
+	if validUser == nil {
+		return &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusBadRequest,
+			ServiceCode: common.ErrCodeUserNotInOrganization,
+			Message:     common.ErrMessageUserNotInOrganization,
+		}
+	}
+	if validUser.Status != 1 {
+		return &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusBadRequest,
+			ServiceCode: common.ErrCodeUserIsInactive,
+			Message:     common.ErrMessageUserIsInactive,
+		}
+	}
+	if err := o.userRepository.UpdateUserRoleManager(validUser.ID, false); err != nil {
 		return &common.ErrorCodeMessage{
 			HTTPCode:    http.StatusInternalServerError,
 			ServiceCode: common.ErrCodeInternalError,

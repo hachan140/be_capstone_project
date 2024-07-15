@@ -19,7 +19,7 @@ type IUserRepository interface {
 	ResetPassword(userID uint, password string) error
 	UpdateUserStatus(userID uint, status int) error
 	FindUserInOrganization(email string, orgID uint) (*model.User, error)
-	UpdateUserRoleManager(userID uint) error
+	UpdateUserRoleManager(userID uint, isManager bool) error
 }
 
 type UserRepository struct {
@@ -135,8 +135,8 @@ func (u *UserRepository) FindUserInOrganization(email string, orgID uint) (*mode
 
 }
 
-func (u *UserRepository) UpdateUserRoleManager(userID uint) error {
-	err := u.storage.Exec("update users set is_organization_manager = true where id = ?", userID).Error
+func (u *UserRepository) UpdateUserRoleManager(userID uint, isManager bool) error {
+	err := u.storage.Exec("update users set is_organization_manager = ? where id = ?", isManager, userID).Error
 	if err != nil {
 		return err
 	}

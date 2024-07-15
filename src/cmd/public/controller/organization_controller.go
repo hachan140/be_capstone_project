@@ -188,3 +188,29 @@ func (o *OrganizationController) AssignPeopleToManager(ctx *gin.Context) {
 	}
 	apihelper.SuccessfulHandle(ctx, nil)
 }
+
+func (o *OrganizationController) RecallPeopleToManager(ctx *gin.Context) {
+	tag := "[RecallPeopleToManager] "
+	userIDRaw, _ := ctx.Get("user_id")
+	userID, _ := strconv.ParseUint(userIDRaw.(string), 10, 32)
+	orgIDRaw := ctx.Param("id")
+	orgID, err := strconv.ParseUint(orgIDRaw, 10, 32)
+	if err != nil {
+		logger.Error(ctx, tag, err)
+		apihelper.AbortErrorHandle(ctx, common.ErrCodeInvalidRequest)
+		return
+	}
+	var req request.RecallPeopleManagerRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		logger.Error(ctx, tag, err)
+		apihelper.AbortErrorHandle(ctx, common.ErrCodeInvalidRequest)
+		return
+	}
+	errRes := o.organizationService.RecallPeopleTobeManager(ctx, uint(orgID), uint(userID), &req)
+	if errRes != nil {
+		logger.Error(ctx, tag, errRes)
+		apihelper.AbortErrorHandleCustomMessage(ctx, errRes.ServiceCode, errRes.Message)
+		return
+	}
+	apihelper.SuccessfulHandle(ctx, nil)
+}
