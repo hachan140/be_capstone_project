@@ -21,7 +21,7 @@ type IOrganizationService interface {
 	CreateOrganization(userId uint, req *request.CreateOrganizationRequest) *common.ErrorCodeMessage
 	UpdateOrganization(orgID uint, userID uint, req *request.UpdateOrganizationRequest) *common.ErrorCodeMessage
 	FindOrganizationByID(orgID uint, userID uint) (*dtos.Organization, *common.ErrorCodeMessage)
-	CheckUserRoleInOrganization(orgID uint, userID uint) (bool, error)
+	CheckUserRoleInOrganization(orgID uint, userID uint) (bool, bool, error)
 	AddPeopleToOrganization(ctx context.Context, orgID uint, userID uint, req *request.AddPeopleToOrganizationRequest) ([]string, *common.ErrorCodeMessage)
 	AcceptOrganizationInvitation(orgID uint, deptID uint, userEmail string) *common.ErrorCodeMessage
 	AssignPeopleTobeManager(ctx context.Context, orgID uint, userID uint, req *request.AssignPeopleToManagerRequest) *common.ErrorCodeMessage
@@ -121,7 +121,7 @@ func (o *OrganizationService) UpdateOrganization(orgID uint, userID uint, req *r
 			Message:     common.ErrMessageOrganizationNotExist,
 		}
 	}
-	isOrganizationManager, err := o.CheckUserRoleInOrganization(orgID, userID)
+	_, isOrganizationManager, err := o.CheckUserRoleInOrganization(orgID, userID)
 	if !isOrganizationManager || err != nil {
 		return &common.ErrorCodeMessage{
 			HTTPCode:    http.StatusBadRequest,
@@ -190,8 +190,8 @@ func (o *OrganizationService) buildOrganizationUpdateQuery(orgExist *model.Organ
 }
 
 func (o *OrganizationService) FindOrganizationByID(orgID uint, userID uint) (*dtos.Organization, *common.ErrorCodeMessage) {
-	isManager, err := o.CheckUserRoleInOrganization(orgID, userID)
-	if !isManager && err != nil {
+	isAdmin, _, err := o.CheckUserRoleInOrganization(orgID, userID)
+	if !isAdmin && err != nil {
 		return nil, &common.ErrorCodeMessage{
 			HTTPCode:    http.StatusBadRequest,
 			ServiceCode: common.ErrCodeInvalidRequest,
@@ -233,7 +233,7 @@ func (o *OrganizationService) AddPeopleToOrganization(ctx context.Context, orgID
 			Message:     common.ErrMessageOrganizationNotExist,
 		}
 	}
-	isManager, _ := o.CheckUserRoleInOrganization(orgID, userID)
+	_, isManager, _ := o.CheckUserRoleInOrganization(orgID, userID)
 	if !isManager {
 		return nil, &common.ErrorCodeMessage{
 			HTTPCode:    http.StatusBadRequest,
@@ -288,7 +288,7 @@ func (o *OrganizationService) AssignPeopleTobeManager(ctx context.Context, orgID
 			Message:     common.ErrMessageOrganizationNotExist,
 		}
 	}
-	isManager, _ := o.CheckUserRoleInOrganization(orgID, userID)
+	_, isManager, _ := o.CheckUserRoleInOrganization(orgID, userID)
 	if !isManager {
 		return &common.ErrorCodeMessage{
 			HTTPCode:    http.StatusBadRequest,
@@ -377,16 +377,19 @@ func (o *OrganizationService) AcceptOrganizationInvitation(orgID uint, deptID ui
 	return nil
 }
 
-func (o *OrganizationService) CheckUserRoleInOrganization(orgID uint, userID uint) (bool, error) {
+func (o *OrganizationService) CheckUserRoleInOrganization(orgID uint, userID uint) (bool, bool, error) {
 	user, err := o.userRepository.FinduserByID(userID)
 	if err != nil {
-		return false, err
+		return false, false, err
 	}
-	if user.OrganizationID == 0 || user.OrganizationID != orgID {
-		return false, errors.New(common.ErrMessageCannotAccessToOrganization)
+	if user.IsAdmin {
+		if user.OrganizationID == 0 || user.OrganizationID != orgID {
+			return true, false, errors.New(common.ErrMessageCannotAccessToOrganization)
+		}
+		if user.OrganizationID != 0 && user.OrganizationID == orgID && user.IsOrganizationManager {
+			return true, true, nil
+		}
 	}
-	if user.OrganizationID != 0 && user.OrganizationID == orgID && user.IsOrganizationManager {
-		return true, nil
-	}
-	return false, nil
+
+	return false, false, nil
 }
