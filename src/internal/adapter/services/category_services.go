@@ -131,7 +131,7 @@ func (c *CategoryService) ListCategories(ctx context.Context, orgID uint, userID
 			DepartmentID:     c.DepartmentID,
 			Status:           c.Status,
 			CreatedBy:        c.CreatedBy,
-			CreatedAt:        time.Now(),
+			CreatedAt:        c.CreatedAt,
 			UpdatedAt:        c.UpdatedAt,
 		}
 		categoryRes = append(categoryRes, cRes)
