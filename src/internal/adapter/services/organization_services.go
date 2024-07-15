@@ -190,11 +190,11 @@ func (o *OrganizationService) buildOrganizationUpdateQuery(orgExist *model.Organ
 }
 
 func (o *OrganizationService) FindOrganizationByID(orgID uint, userID uint) (*dtos.Organization, *common.ErrorCodeMessage) {
-	_, err := o.CheckUserRoleInOrganization(orgID, userID)
-	if err != nil {
+	isManager, err := o.CheckUserRoleInOrganization(orgID, userID)
+	if !isManager && err != nil {
 		return nil, &common.ErrorCodeMessage{
-			HTTPCode:    http.StatusInternalServerError,
-			ServiceCode: common.ErrCodeInternalError,
+			HTTPCode:    http.StatusBadRequest,
+			ServiceCode: common.ErrCodeInvalidRequest,
 			Message:     err.Error(),
 		}
 	}
