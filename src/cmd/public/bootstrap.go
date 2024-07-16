@@ -73,8 +73,8 @@ func BootstrapAndRun() {
 	// Service layer
 	sampleService := services.NewSampleService(sampleRepository)
 	userService := services.NewUserService(userRepository, refreshTokenRepository, *cfg)
-	organizationService := services.NewOrganizationService(organizationRepositoy, userRepository, cfg.EmailConfig)
-	categoryService := services.NewCategoryService(categoryRepository, userRepository)
+	organizationService := services.NewOrganizationService(organizationRepositoy, userRepository, cfg.EmailConfig, categoryRepository, documentRepository)
+	categoryService := services.NewCategoryService(categoryRepository, userRepository, documentRepository)
 	hyperDocumentService := services.NewHyperDocumentService(documentRepository)
 	searchService := services.NewSearchService(privateDocumentRepository, documentRepository, userRepository, searchHistoryRepository)
 

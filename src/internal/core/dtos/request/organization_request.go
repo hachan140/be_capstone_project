@@ -32,6 +32,11 @@ func (o *UpdateOrganizationRequest) Validate() error {
 	return nil
 }
 
+type UpdateOrganizationStatusRequest struct {
+	Status    *int
+	UpdatedBy string
+}
+
 type AddPeopleToOrganizationRequest struct {
 	Users []*UserInfo `json:"users"`
 }

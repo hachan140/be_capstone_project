@@ -47,6 +47,7 @@ func RegisterGinRouters(
 		organizationGroup.POST("", organizationController.CreateOrganization)
 		organizationGroup.GET("/:id", organizationController.ViewOrganization)
 		organizationGroup.PATCH("/:id", organizationController.UpdateOrganization)
+		organizationGroup.PATCH("/:id/status", organizationController.UpdateOrganizationStatus)
 		organizationGroup.POST("/:id/add-people", organizationController.AddPeopleToOrganization)
 		organizationGroup.POST("/:id/assign-manager", organizationController.AssignPeopleToManager)
 		organizationGroup.POST("/:id/recall-manager", organizationController.RecallPeopleToManager)
@@ -62,6 +63,7 @@ func RegisterGinRouters(
 		categoryGroup.POST("", categoryController.CreateCategory)
 		categoryGroup.GET("/:id", categoryController.ViewCategoryByID)
 		categoryGroup.PATCH("/:id", categoryController.UpdateCategory)
+		categoryGroup.PATCH("/:id/status", categoryController.UpdateCategoryStatus)
 		//categoryGroup.GET("/organization/:id", categoryController.ViewListCategoryByOrganization)
 	}
 
@@ -70,6 +72,7 @@ func RegisterGinRouters(
 	{
 		departmentGroup.GET("/:id/category/by-name", categoryController.ViewCategoryByNameLike)
 		departmentGroup.GET("/:id/category", categoryController.ViewListCategoryByDepartment)
+		departmentGroup.PATCH("/:id/status", categoryController.UpdateDepartmentStatus)
 	}
 	documentGroup := in.Group("/document")
 	documentGroup.Use(middleware.ValidateToken(publicKey))

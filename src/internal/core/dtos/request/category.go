@@ -38,3 +38,13 @@ func (c *UpdateCategoryRequest) Validate() error {
 	}
 	return nil
 }
+
+type UpdateCategoryStatusRequest struct {
+	Status    *int   `json:"status"`
+	UpdatedBy string `json:"updated_by"`
+}
+
+type UpdateDepartmentStatusRequest struct {
+	Status    *int   `json:"status"`
+	UpdatedBy string `json:"updated_by"`
+}

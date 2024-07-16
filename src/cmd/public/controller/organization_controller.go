@@ -87,6 +87,38 @@ func (o *OrganizationController) UpdateOrganization(ctx *gin.Context) {
 	apihelper.SuccessfulHandle(ctx, nil)
 	return
 }
+func (o *OrganizationController) UpdateOrganizationStatus(ctx *gin.Context) {
+	tag := "[UpdateOrganizationStatus] "
+	orgIDRaw := ctx.Param("id")
+	orgID, err := strconv.ParseUint(orgIDRaw, 10, 32)
+	if err != nil {
+		logger.Error(ctx, tag, err)
+		apihelper.AbortErrorHandle(ctx, common.ErrCodeInvalidRequest)
+		return
+	}
+	var req request.UpdateOrganizationStatusRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		logger.Error(ctx, tag, err)
+		apihelper.AbortErrorHandle(ctx, common.ErrCodeInvalidRequest)
+		return
+	}
+	userIDRaw, _ := ctx.Get("user_id")
+	userID, _ := strconv.ParseUint(userIDRaw.(string), 10, 32)
+	email := ""
+	userEmail, ok := ctx.Get("email")
+	if ok {
+		email = fmt.Sprintf("%v", userEmail)
+	}
+	req.UpdatedBy = email
+	errR := o.organizationService.UpdateOrganizationStatus(uint(orgID), uint(userID), &req)
+	if errR != nil {
+		logger.ErrorCtx(ctx, tag+"Failed to create sample with error: %v", errR)
+		apihelper.AbortErrorHandleCustomMessage(ctx, errR.ServiceCode, errR.Message)
+		return
+	}
+	apihelper.SuccessfulHandle(ctx, nil)
+	return
+}
 
 func (o *OrganizationController) ViewOrganization(ctx *gin.Context) {
 	tag := "[ViewOrganizationController] "

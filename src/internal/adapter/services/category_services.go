@@ -18,16 +18,19 @@ type ICategoryService interface {
 	ListCategories(ctx context.Context, orgID uint, userID uint, req *request.GetListCategoryRequest) ([]*dtos.Category, *common.ErrorCodeMessage)
 	GetCategoryByID(ctx context.Context, id uint, userID uint) (*dtos.Category, *common.ErrorCodeMessage)
 	UpdateCategoryByID(ctx context.Context, userID uint, catID uint, req *request.UpdateCategoryRequest) *common.ErrorCodeMessage
+	UpdateCategoryStatus(ctx context.Context, userID uint, catID uint, req *request.UpdateCategoryStatusRequest) *common.ErrorCodeMessage
+	UpdateDepartmentStatus(ctx context.Context, userID uint, deptID uint, req *request.UpdateDepartmentStatusRequest) *common.ErrorCodeMessage
 	SearchCategoryByName(ctx context.Context, name string, userID uint, deptID uint) ([]*dtos.Category, *common.ErrorCodeMessage)
 }
 
 type CategoryService struct {
 	categoryRepo   postgres.ICategoryRepository
 	userRepository postgres.IUserRepository
+	documentRepo   postgres.IDocumentRepository
 }
 
-func NewCategoryService(categoryRepo postgres.ICategoryRepository, userRepo postgres.IUserRepository) ICategoryService {
-	return &CategoryService{categoryRepo: categoryRepo, userRepository: userRepo}
+func NewCategoryService(categoryRepo postgres.ICategoryRepository, userRepo postgres.IUserRepository, documentRepo postgres.IDocumentRepository) ICategoryService {
+	return &CategoryService{categoryRepo: categoryRepo, userRepository: userRepo, documentRepo: documentRepo}
 }
 
 func (c *CategoryService) CreateCategory(ctx context.Context, userID uint, req *request.CreateCategoryRequest) *common.ErrorCodeMessage {
@@ -39,7 +42,7 @@ func (c *CategoryService) CreateCategory(ctx context.Context, userID uint, req *
 			Message:     err.Error(),
 		}
 	}
-	isOrgManager, errC := c.CheckUserRoleInOrganization(req.OrganizationID, user.ID)
+	isDeptManager, _, errC := c.CheckUserRoleInOrganization(req.OrganizationID, user.ID, req.DepartmentID)
 	if errC != nil {
 		return &common.ErrorCodeMessage{
 			HTTPCode:    http.StatusInternalServerError,
@@ -47,7 +50,7 @@ func (c *CategoryService) CreateCategory(ctx context.Context, userID uint, req *
 			Message:     errC.Message,
 		}
 	}
-	if !isOrgManager || errC != nil {
+	if !isDeptManager {
 		return &common.ErrorCodeMessage{
 			HTTPCode:    http.StatusBadRequest,
 			ServiceCode: common.ErrCodeCannotAccessToOrganization,
@@ -159,7 +162,7 @@ func (c *CategoryService) GetCategoryByID(ctx context.Context, id uint, userID u
 			Message:     common.ErrMessageCategoryNotFound,
 		}
 	}
-	_, errC := c.CheckUserRoleInOrganization(cat.OrganizationID, userID)
+	_, _, errC := c.CheckUserRoleInOrganization(cat.OrganizationID, userID, 0)
 	if errC != nil {
 		return nil, &common.ErrorCodeMessage{
 			HTTPCode:    http.StatusInternalServerError,
@@ -209,8 +212,8 @@ func (c *CategoryService) UpdateCategoryByID(ctx context.Context, userID uint, c
 			Message:     common.ErrMessageCategoryNotFound,
 		}
 	}
-	isOrgManager, errC := c.CheckUserRoleInOrganization(category.OrganizationID, userID)
-	if !isOrgManager || errC != nil {
+	isDeptManager, isOrgManager, _ := c.CheckUserRoleInOrganization(category.OrganizationID, userID, category.DepartmentID)
+	if !isOrgManager || !isDeptManager {
 		return &common.ErrorCodeMessage{
 			HTTPCode:    http.StatusBadRequest,
 			ServiceCode: common.ErrCodeCannotAccessToOrganization,
@@ -246,26 +249,125 @@ func (c *CategoryService) UpdateCategoryByID(ctx context.Context, userID uint, c
 	return nil
 }
 
-func (c *CategoryService) CheckUserRoleInOrganization(orgID uint, userID uint) (bool, *common.ErrorCodeMessage) {
+func (c *CategoryService) UpdateCategoryStatus(ctx context.Context, userID uint, catID uint, req *request.UpdateCategoryStatusRequest) *common.ErrorCodeMessage {
+	category, err := c.categoryRepo.FindCategoryByID(catID)
+	if err != nil {
+		return &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusInternalServerError,
+			ServiceCode: common.ErrCodeInternalError,
+			Message:     err.Error(),
+		}
+	}
+	if category == nil {
+		return &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusBadRequest,
+			ServiceCode: common.ErrCodeCategoryNotFound,
+			Message:     common.ErrMessageCategoryNotFound,
+		}
+	}
+	isDeptManager, isOrgManager, _ := c.CheckUserRoleInOrganization(category.OrganizationID, userID, category.DepartmentID)
+	if !isOrgManager && !isDeptManager {
+		return &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusBadRequest,
+			ServiceCode: common.ErrCodeCannotAccessToOrganization,
+			Message:     common.ErrMessageCannotAccessToOrganization,
+		}
+	}
+	if err := c.categoryRepo.UpdateCategoryStatusByID(catID, *req.Status); err != nil {
+		return &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusInternalServerError,
+			ServiceCode: common.ErrCodeInternalError,
+			Message:     err.Error(),
+		}
+	}
+	// update document status
+	if err := c.documentRepo.UpdateDocumentStatusByCategoryID(catID, *req.Status); err != nil {
+		return &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusInternalServerError,
+			ServiceCode: common.ErrCodeInternalError,
+			Message:     err.Error(),
+		}
+	}
+	return nil
+}
+
+func (c *CategoryService) UpdateDepartmentStatus(ctx context.Context, userID uint, deptID uint, req *request.UpdateDepartmentStatusRequest) *common.ErrorCodeMessage {
+	deparment, err := c.categoryRepo.FindDepartmentByID(deptID)
+	if err != nil {
+		return &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusInternalServerError,
+			ServiceCode: common.ErrCodeInternalError,
+			Message:     err.Error(),
+		}
+	}
+	if deparment == nil {
+		return &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusBadRequest,
+			ServiceCode: common.ErrCodeCategoryNotFound,
+			Message:     common.ErrMessageCategoryNotFound,
+		}
+	}
+	isDeptManager, _, _ := c.CheckUserRoleInOrganization(deparment.OrganizationID, userID, deptID)
+	if !isDeptManager {
+		return &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusBadRequest,
+			ServiceCode: common.ErrCodeCannotAccessToOrganization,
+			Message:     common.ErrMessageCannotAccessToOrganization,
+		}
+	}
+
+	if err := c.categoryRepo.UpdateDepartmentStatusByID(deptID, *req.Status); err != nil {
+		return &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusInternalServerError,
+			ServiceCode: common.ErrCodeInternalError,
+			Message:     err.Error(),
+		}
+	}
+
+	if err := c.categoryRepo.UpdateCategoriesStatusByDepartmentID(deptID, *req.Status); err != nil {
+		return &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusInternalServerError,
+			ServiceCode: common.ErrCodeInternalError,
+			Message:     err.Error(),
+		}
+	}
+
+	if err := c.documentRepo.UpdateDocumentStatusByDepartmentID(deptID, *req.Status); err != nil {
+		return &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusInternalServerError,
+			ServiceCode: common.ErrCodeInternalError,
+			Message:     err.Error(),
+		}
+	}
+
+	return nil
+}
+
+func (c *CategoryService) CheckUserRoleInOrganization(orgID uint, userID uint, depID uint) (bool, bool, *common.ErrorCodeMessage) {
+	isOrgManager := false
+	isDeptManager := false
 	user, err := c.userRepository.FinduserByID(userID)
 	if err != nil {
-		return false, &common.ErrorCodeMessage{
+		return false, false, &common.ErrorCodeMessage{
 			HTTPCode:    http.StatusInternalServerError,
 			ServiceCode: common.ErrCodeInternalError,
 			Message:     err.Error(),
 		}
 	}
 	if user.OrganizationID == 0 || user.OrganizationID != orgID {
-		return false, &common.ErrorCodeMessage{
+		return false, false, &common.ErrorCodeMessage{
 			HTTPCode:    http.StatusBadRequest,
 			ServiceCode: common.ErrCodeCannotAccessToOrganization,
 			Message:     common.ErrMessageCannotAccessToOrganization,
 		}
 	}
 	if user.OrganizationID != 0 && user.OrganizationID == orgID && user.IsOrganizationManager {
-		return true, nil
+		isOrgManager = true
 	}
-	return false, nil
+	if user.OrganizationID != 0 && user.OrganizationID == orgID && user.IsDeptManager && user.DeptID == depID {
+		isDeptManager = true
+	}
+	return isDeptManager, isOrgManager, nil
 }
 
 func (c *CategoryService) buildUpdateCategory(existedCategory *model2.Category, req *request.UpdateCategoryRequest) *model2.Category {

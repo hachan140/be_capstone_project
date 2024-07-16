@@ -20,6 +20,7 @@ import (
 type IOrganizationService interface {
 	CreateOrganization(userId uint, req *request.CreateOrganizationRequest) *common.ErrorCodeMessage
 	UpdateOrganization(orgID uint, userID uint, req *request.UpdateOrganizationRequest) *common.ErrorCodeMessage
+	UpdateOrganizationStatus(orgID uint, userID uint, req *request.UpdateOrganizationStatusRequest) *common.ErrorCodeMessage
 	FindOrganizationByID(orgID uint, userID uint) (*dtos.Organization, *common.ErrorCodeMessage)
 	CheckUserRoleInOrganization(orgID uint, userID uint) (bool, bool, error)
 	AddPeopleToOrganization(ctx context.Context, orgID uint, userID uint, req *request.AddPeopleToOrganizationRequest) ([]string, *common.ErrorCodeMessage)
@@ -32,13 +33,18 @@ type OrganizationService struct {
 	organizationRepository postgres.IOrganizationRepository
 	userRepository         postgres.IUserRepository
 	emailConfig            common_configs.EmailConfig
+	categoryRepository     postgres.ICategoryRepository
+	documentRepository     postgres.IDocumentRepository
 }
 
-func NewOrganizationService(orgRepo postgres.IOrganizationRepository, userRepository postgres.IUserRepository, emailConfig common_configs.EmailConfig) IOrganizationService {
+func NewOrganizationService(orgRepo postgres.IOrganizationRepository, userRepository postgres.IUserRepository,
+	emailConfig common_configs.EmailConfig, categoryRepository postgres.ICategoryRepository, documentRepository postgres.IDocumentRepository) IOrganizationService {
 	return &OrganizationService{
 		organizationRepository: orgRepo,
 		userRepository:         userRepository,
 		emailConfig:            emailConfig,
+		categoryRepository:     categoryRepository,
+		documentRepository:     documentRepository,
 	}
 }
 
@@ -163,6 +169,63 @@ func (o *OrganizationService) UpdateOrganization(orgID uint, userID uint, req *r
 			Message:     err.Error(),
 		}
 	}
+	return nil
+}
+
+func (o *OrganizationService) UpdateOrganizationStatus(orgID uint, userID uint, req *request.UpdateOrganizationStatusRequest) *common.ErrorCodeMessage {
+	org, err := o.organizationRepository.FindOrganizationByID(orgID)
+	if err != nil {
+		return &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusInternalServerError,
+			ServiceCode: common.ErrCodeInternalError,
+			Message:     err.Error(),
+		}
+	}
+	if org == nil {
+		return &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusBadRequest,
+			ServiceCode: common.ErrCodeOrganizationNotExist,
+			Message:     common.ErrMessageOrganizationNotExist,
+		}
+	}
+	_, isOrganizationManager, _ := o.CheckUserRoleInOrganization(orgID, userID)
+	if !isOrganizationManager {
+		return &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusBadRequest,
+			ServiceCode: common.ErrCodeCannotAccessToOrganization,
+			Message:     common.ErrMessageCannotAccessToOrganization,
+		}
+	}
+
+	if err := o.organizationRepository.UpdateOrganizationStatus(orgID, *req.Status); err != nil {
+		return &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusInternalServerError,
+			ServiceCode: common.ErrCodeInternalError,
+			Message:     err.Error(),
+		}
+	}
+	if err := o.categoryRepository.UpdateCategoriesStatusByOrganizationID(orgID, *req.Status); err != nil {
+		return &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusInternalServerError,
+			ServiceCode: common.ErrCodeInternalError,
+			Message:     err.Error(),
+		}
+	}
+	if err := o.categoryRepository.UpdateDepartmentsStatusByOrganizationID(orgID, *req.Status); err != nil {
+		return &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusInternalServerError,
+			ServiceCode: common.ErrCodeInternalError,
+			Message:     err.Error(),
+		}
+	}
+	if err := o.documentRepository.UpdateDocumentStatusByOrganizationID(orgID, *req.Status); err != nil {
+		return &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusInternalServerError,
+			ServiceCode: common.ErrCodeInternalError,
+			Message:     err.Error(),
+		}
+	}
+
 	return nil
 }
 
@@ -453,6 +516,13 @@ func (o *OrganizationService) CheckUserRoleInOrganization(orgID uint, userID uin
 		}
 		if user.OrganizationID != 0 && user.OrganizationID == orgID && user.IsOrganizationManager {
 			return true, true, nil
+		}
+	} else {
+		if user.OrganizationID == 0 || user.OrganizationID != orgID {
+			return false, false, errors.New(common.ErrMessageCannotAccessToOrganization)
+		}
+		if user.OrganizationID != 0 && user.OrganizationID == orgID && user.IsOrganizationManager {
+			return false, true, nil
 		}
 	}
 

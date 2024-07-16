@@ -10,6 +10,7 @@ type IOrganizationRepository interface {
 	FindOrganizationByID(ID uint) (*model.Organization, error)
 	FindOrganizationByName(name string) (*model.Organization, error)
 	UpdateOrganization(orgID uint, org *model.Organization) error
+	UpdateOrganizationStatus(orgID uint, status int) error
 	FindOrganizationByAuthor(createdBy string) (*model.Organization, error)
 }
 
@@ -60,6 +61,14 @@ func (o *OrganizationRepository) FindOrganizationByAuthor(createdBy string) (*mo
 
 func (o *OrganizationRepository) UpdateOrganization(orgID uint, org *model.Organization) error {
 	err := o.storage.Model(org).Where("id = ?", orgID).Updates(org).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (o *OrganizationRepository) UpdateOrganizationStatus(orgID uint, status int) error {
+	err := o.storage.Exec("update organizations set status = ? where id = ?", status, orgID).Error
 	if err != nil {
 		return err
 	}

@@ -88,6 +88,72 @@ func (o *CategoryController) UpdateCategory(ctx *gin.Context) {
 	return
 }
 
+func (o *CategoryController) UpdateCategoryStatus(ctx *gin.Context) {
+	tag := "[UpdateCategoryController] "
+	catIDRaw := ctx.Param("id")
+	catID, err := strconv.ParseUint(catIDRaw, 10, 32)
+	if err != nil {
+		logger.Error(ctx, tag, err)
+		apihelper.AbortErrorHandle(ctx, common.ErrCodeInvalidRequest)
+		return
+	}
+	var req request.UpdateCategoryStatusRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		logger.Error(ctx, tag, err)
+		apihelper.AbortErrorHandle(ctx, common.ErrCodeInvalidRequest)
+		return
+	}
+	email := ""
+	userEmail, ok := ctx.Get("email")
+	if ok {
+		email = fmt.Sprintf("%v", userEmail)
+	}
+	req.UpdatedBy = email
+	userIDRaw, _ := ctx.Get("user_id")
+	userID, _ := strconv.ParseUint(userIDRaw.(string), 10, 32)
+	errRes := o.categoryService.UpdateCategoryStatus(ctx, uint(userID), uint(catID), &req)
+	if errRes != nil {
+		logger.ErrorCtx(ctx, tag+"Failed to update category with error: %v", errRes)
+		apihelper.AbortErrorHandle(ctx, errRes.ServiceCode)
+		return
+	}
+	apihelper.SuccessfulHandle(ctx, nil)
+	return
+}
+
+func (o *CategoryController) UpdateDepartmentStatus(ctx *gin.Context) {
+	tag := "[UpdateDepartmentStatus] "
+	deptIDRaw := ctx.Param("id")
+	deptID, err := strconv.ParseUint(deptIDRaw, 10, 32)
+	if err != nil {
+		logger.Error(ctx, tag, err)
+		apihelper.AbortErrorHandle(ctx, common.ErrCodeInvalidRequest)
+		return
+	}
+	var req request.UpdateDepartmentStatusRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		logger.Error(ctx, tag, err)
+		apihelper.AbortErrorHandle(ctx, common.ErrCodeInvalidRequest)
+		return
+	}
+	email := ""
+	userEmail, ok := ctx.Get("email")
+	if ok {
+		email = fmt.Sprintf("%v", userEmail)
+	}
+	req.UpdatedBy = email
+	userIDRaw, _ := ctx.Get("user_id")
+	userID, _ := strconv.ParseUint(userIDRaw.(string), 10, 32)
+	errRes := o.categoryService.UpdateDepartmentStatus(ctx, uint(userID), uint(deptID), &req)
+	if errRes != nil {
+		logger.ErrorCtx(ctx, tag+"Failed to update category with error: %v", errRes)
+		apihelper.AbortErrorHandle(ctx, errRes.ServiceCode)
+		return
+	}
+	apihelper.SuccessfulHandle(ctx, nil)
+	return
+}
+
 func (c *CategoryController) ViewCategoryByID(ctx *gin.Context) {
 	tag := "[ViewCategoryController] "
 	catRaw := ctx.Param("id")
