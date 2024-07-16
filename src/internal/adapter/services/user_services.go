@@ -296,7 +296,7 @@ func (u *UserService) ResetPasswordRequest(ctx context.Context, req *request.Res
 			Message:     err.Error(),
 		}
 	}
-	resetPasswordLink := fmt.Sprintf("%s?token=%s", u.config.ResetPasswordConfig.LinkResetPassword, token)
+	resetPasswordLink := fmt.Sprintf("%s?token=%s", "http://localhost:5173/reset-password", token)
 	err = utils.SendResetPasswordLink(resetPasswordLink, u.config.ResetPasswordConfig.ResetPasswordSender, u.config.ResetPasswordConfig.ResetPasswordSenderPassword, req.Email)
 	if err != nil {
 		return nil, &common.ErrorCodeMessage{
