@@ -326,7 +326,15 @@ func (u *UserService) ResetPassword(ctx context.Context, email string, req *requ
 			Message:     common.ErrMessageInvalidEmail,
 		}
 	}
-	if err := u.userRepository.ResetPassword(userModel.ID, req.NewPassword); err != nil {
+	hashedPassword, err := utils.EncryptPassword(req.NewPassword)
+	if err != nil {
+		return &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusInternalServerError,
+			ServiceCode: common.ErrCodeInternalError,
+			Message:     err.Error(),
+		}
+	}
+	if err := u.userRepository.ResetPassword(userModel.ID, hashedPassword); err != nil {
 		return &common.ErrorCodeMessage{
 			HTTPCode:    http.StatusInternalServerError,
 			ServiceCode: common.ErrCodeInternalError,
