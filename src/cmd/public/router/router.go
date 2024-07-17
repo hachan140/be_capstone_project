@@ -49,6 +49,7 @@ func RegisterGinRouters(
 		organizationGroup.PATCH("/:id", organizationController.UpdateOrganization)
 		organizationGroup.PATCH("/:id/status", organizationController.UpdateOrganizationStatus)
 		organizationGroup.POST("/:id/add-people", organizationController.AddPeopleToOrganization)
+		organizationGroup.POST(":id/remove-people", organizationController.RemovePeopleFromOrganization)
 		organizationGroup.POST("/:id/assign-manager", organizationController.AssignPeopleToManager)
 		organizationGroup.POST("/:id/recall-manager", organizationController.RecallPeopleToManager)
 	}

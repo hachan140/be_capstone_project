@@ -170,6 +170,32 @@ func (o *OrganizationController) AddPeopleToOrganization(ctx *gin.Context) {
 	apihelper.SuccessfulHandle(ctx, res)
 }
 
+func (o *OrganizationController) RemovePeopleFromOrganization(ctx *gin.Context) {
+	tag := "[RemovePeopleFromOrganization] "
+	orgIDRaw := ctx.Param("id")
+	orgID, err := strconv.ParseUint(orgIDRaw, 10, 32)
+	if err != nil {
+		logger.Error(ctx, tag, err)
+		apihelper.AbortErrorHandle(ctx, common.ErrCodeInvalidRequest)
+		return
+	}
+	userIDRaw, _ := ctx.Get("user_id")
+	userID, _ := strconv.ParseUint(userIDRaw.(string), 10, 32)
+	var req request.RemoveUserFromOrganizationRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		logger.Error(ctx, tag, err)
+		apihelper.AbortErrorHandle(ctx, common.ErrCodeInvalidRequest)
+		return
+	}
+	errRes := o.organizationService.RemoveUserFromOrganization(ctx, uint(orgID), uint(userID), &req)
+	if errRes != nil {
+		logger.Error(ctx, tag, err)
+		apihelper.AbortErrorHandleCustomMessage(ctx, errRes.ServiceCode, errRes.Message)
+		return
+	}
+	apihelper.SuccessfulHandle(ctx, nil)
+}
+
 func (o *OrganizationController) AcceptOrganizationInvitation(ctx *gin.Context) {
 	tag := "[AcceptOrganizationInvitationController] "
 	orgIDRaw := ctx.Param("orgID")

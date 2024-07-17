@@ -24,6 +24,7 @@ type IOrganizationService interface {
 	FindOrganizationByID(orgID uint, userID uint) (*dtos.Organization, *common.ErrorCodeMessage)
 	CheckUserRoleInOrganization(orgID uint, userID uint) (bool, bool, error)
 	AddPeopleToOrganization(ctx context.Context, orgID uint, userID uint, req *request.AddPeopleToOrganizationRequest) ([]string, *common.ErrorCodeMessage)
+	RemoveUserFromOrganization(ctx context.Context, orgID uint, userID uint, req *request.RemoveUserFromOrganizationRequest) *common.ErrorCodeMessage
 	AcceptOrganizationInvitation(orgID uint, deptID uint, userEmail string) *common.ErrorCodeMessage
 	AssignPeopleTobeManager(ctx context.Context, orgID uint, userID uint, req *request.AssignPeopleToManagerRequest) *common.ErrorCodeMessage
 	RecallPeopleTobeManager(ctx context.Context, orgID uint, userID uint, req *request.RecallPeopleManagerRequest) *common.ErrorCodeMessage
@@ -265,9 +266,9 @@ func (o *OrganizationService) FindOrganizationByID(orgID uint, userID uint) (*dt
 	org, err := o.organizationRepository.FindOrganizationByID(orgID)
 	if err != nil {
 		return nil, &common.ErrorCodeMessage{
-			HTTPCode:    http.StatusBadRequest,
-			ServiceCode: common.ErrCodeOrganizationNotExist,
-			Message:     common.ErrMessageOrganizationNotExist,
+			HTTPCode:    http.StatusInternalServerError,
+			ServiceCode: common.ErrCodeInternalError,
+			Message:     err.Error(),
 		}
 	}
 	if org == nil {
@@ -285,9 +286,9 @@ func (o *OrganizationService) AddPeopleToOrganization(ctx context.Context, orgID
 	org, err := o.organizationRepository.FindOrganizationByID(orgID)
 	if err != nil {
 		return nil, &common.ErrorCodeMessage{
-			HTTPCode:    http.StatusBadRequest,
-			ServiceCode: common.ErrCodeUserDoesNotHavePermission,
-			Message:     common.ErrMessageUserDoesNotHavePermission,
+			HTTPCode:    http.StatusInternalServerError,
+			ServiceCode: common.ErrCodeInternalError,
+			Message:     err.Error(),
 		}
 	}
 	if org == nil {
@@ -334,6 +335,40 @@ func (o *OrganizationService) AddPeopleToOrganization(ctx context.Context, orgID
 		}
 	}
 	return validEmails, nil
+}
+
+func (o *OrganizationService) RemoveUserFromOrganization(ctx context.Context, orgID uint, userID uint, req *request.RemoveUserFromOrganizationRequest) *common.ErrorCodeMessage {
+	org, err := o.organizationRepository.FindOrganizationByID(orgID)
+	if err != nil {
+		return &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusInternalServerError,
+			ServiceCode: common.ErrCodeInternalError,
+			Message:     err.Error(),
+		}
+	}
+	if org == nil {
+		return &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusBadRequest,
+			ServiceCode: common.ErrCodeOrganizationNotExist,
+			Message:     common.ErrMessageOrganizationNotExist,
+		}
+	}
+	_, isManager, _ := o.CheckUserRoleInOrganization(orgID, userID)
+	if !isManager {
+		return &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusBadRequest,
+			ServiceCode: common.ErrCodeUserDoesNotHavePermission,
+			Message:     common.ErrMessageUserDoesNotHavePermission,
+		}
+	}
+	if err := o.userRepository.RemoveUserFromOrganization(req.UserID); err != nil {
+		return &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusInternalServerError,
+			ServiceCode: common.ErrCodeInternalError,
+			Message:     err.Error(),
+		}
+	}
+	return nil
 }
 
 func (o *OrganizationService) AssignPeopleTobeManager(ctx context.Context, orgID uint, userID uint, req *request.AssignPeopleToManagerRequest) *common.ErrorCodeMessage {

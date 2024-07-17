@@ -41,6 +41,10 @@ type AddPeopleToOrganizationRequest struct {
 	Users []*UserInfo `json:"users"`
 }
 
+type RemoveUserFromOrganizationRequest struct {
+	UserID uint `json:"user_id"`
+}
+
 type UserInfo struct {
 	Email        string `json:"email"`
 	DepartmentID uint   `json:"department_id"`

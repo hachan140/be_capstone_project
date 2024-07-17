@@ -20,6 +20,7 @@ type IUserRepository interface {
 	UpdateUserStatus(userID uint, status int) error
 	FindUserInOrganization(email string, orgID uint) (*model.User, error)
 	UpdateUserRoleManager(userID uint, isManager bool) error
+	RemoveUserFromOrganization(userID uint) error
 }
 
 type UserRepository struct {
@@ -137,6 +138,14 @@ func (u *UserRepository) FindUserInOrganization(email string, orgID uint) (*mode
 
 func (u *UserRepository) UpdateUserRoleManager(userID uint, isManager bool) error {
 	err := u.storage.Exec("update users set is_organization_manager = ? where id = ?", isManager, userID).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (u *UserRepository) RemoveUserFromOrganization(userID uint) error {
+	err := u.storage.Exec("update users set is_organization_manager = false, organization_id = 0, dept_id = 0, is_dept_manager = false where id = ?", userID).Error
 	if err != nil {
 		return err
 	}
