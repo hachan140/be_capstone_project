@@ -50,7 +50,7 @@ func (c *CategoryService) CreateCategory(ctx context.Context, userID uint, req *
 			Message:     errC.Message,
 		}
 	}
-	if !isDeptManager || !isOrgManager {
+	if !isDeptManager && !isOrgManager {
 		return &common.ErrorCodeMessage{
 			HTTPCode:    http.StatusBadRequest,
 			ServiceCode: common.ErrCodeCannotAccessToOrganization,
@@ -213,7 +213,7 @@ func (c *CategoryService) UpdateCategoryByID(ctx context.Context, userID uint, c
 		}
 	}
 	isDeptManager, isOrgManager, _ := c.CheckUserRoleInOrganization(category.OrganizationID, userID, category.DepartmentID)
-	if !isOrgManager || !isDeptManager {
+	if !isOrgManager && !isDeptManager {
 		return &common.ErrorCodeMessage{
 			HTTPCode:    http.StatusBadRequest,
 			ServiceCode: common.ErrCodeCannotAccessToOrganization,
