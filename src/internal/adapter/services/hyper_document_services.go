@@ -53,8 +53,8 @@ func (h *HyperDocumentService) BuildQueryFilterDocument(req request.HyperDocumen
 	query := ` WHERE 1 = 1 `
 	var params []interface{}
 	if req.Title != "" {
-		query += ` AND LOWER(documents.title) like '%?%'`
-		params = append(params, strings.ToLower(req.Title))
+		query += ` AND LOWER(documents.title) like ?`
+		params = append(params, "%"+strings.ToLower(req.Title)+"%")
 	}
 	if req.Type != "" {
 		query += ` AND documents.type = ?`
