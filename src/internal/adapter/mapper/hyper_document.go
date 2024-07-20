@@ -5,8 +5,8 @@ import (
 	"be-capstone-project/src/internal/core/dtos"
 )
 
-func DocumentToHyperDocumentDTO(document *model.Document) *dtos.HyperDocument {
-	return &dtos.HyperDocument{
+func DocumentToHyperDocumentDTO(document *model.Document) *dtos.Document {
+	return &dtos.Document{
 		ID:          document.ID,
 		Title:       document.Title,
 		Description: document.Description,
@@ -24,8 +24,35 @@ func DocumentToHyperDocumentDTO(document *model.Document) *dtos.HyperDocument {
 	}
 }
 
-func MultimediaToHyperDocumentDTO(multimedia *model.MultiMedia) *dtos.HyperDocument {
-	return &dtos.HyperDocument{
+func DocumentsToHyperDocumentDTOs(document []*model.Document) []*dtos.Document {
+	if document == nil {
+		return nil
+	}
+	documentRes := make([]*dtos.Document, 0)
+	for _, document := range document {
+		dRes := &dtos.Document{
+			ID:          document.ID,
+			Title:       document.Title,
+			Description: document.Description,
+			Content:     document.Content,
+			CategoryID:  document.CategoryID,
+			TotalPage:   document.TotalPage,
+			Status:      document.Status,
+			Type:        document.Type,
+			FilePath:    document.FilePath,
+			FileID:      document.FileID,
+			Duration:    0,
+			CreatedAt:   document.CreatedAt,
+			CreatedBy:   document.CreatedBy,
+			UpdatedAt:   document.UpdatedAt,
+		}
+		documentRes = append(documentRes, dRes)
+	}
+	return documentRes
+}
+
+func MultimediaToHyperDocumentDTO(multimedia *model.MultiMedia) *dtos.Document {
+	return &dtos.Document{
 		ID:          multimedia.ID,
 		Title:       multimedia.Title,
 		Description: multimedia.Description,

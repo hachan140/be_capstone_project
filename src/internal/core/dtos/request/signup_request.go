@@ -28,3 +28,7 @@ func (s *SignUpRequest) Validate() error {
 	}
 	return nil
 }
+
+type VerifyEmail struct {
+	Email string `form:"email"`
+}

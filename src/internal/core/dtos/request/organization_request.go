@@ -29,14 +29,23 @@ func (o *UpdateOrganizationRequest) Validate() error {
 	if *o.Name == "" {
 		return errors.New(common.ErrMessageInvalidOrganizationName)
 	}
-	if o.Status != nil {
-		if *o.Status != 0 || *o.Status != 1 {
-			return errors.New(common.ErrMessageInvalidStatus)
-		}
-	}
 	return nil
 }
 
+type UpdateOrganizationStatusRequest struct {
+	Status    *int
+	UpdatedBy string
+}
+
 type AddPeopleToOrganizationRequest struct {
-	Emails []*string `json:"emails"`
+	Users []*UserInfo `json:"users"`
+}
+
+type RemoveUserFromOrganizationRequest struct {
+	UserID uint `json:"user_id"`
+}
+
+type UserInfo struct {
+	Email        string `json:"email"`
+	DepartmentID uint   `json:"department_id"`
 }

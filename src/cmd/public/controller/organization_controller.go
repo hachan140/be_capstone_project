@@ -8,7 +8,6 @@ import (
 	"be-capstone-project/src/internal/core/logger"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"net/http"
 	"strconv"
 )
 
@@ -44,7 +43,7 @@ func (o *OrganizationController) CreateOrganization(ctx *gin.Context) {
 	err := o.organizationService.CreateOrganization(uint(userID), &req)
 	if err != nil {
 		logger.ErrorCtx(ctx, tag+"Failed to create sample with error: %v", err)
-		apihelper.AbortErrorHandleCustomMessage(ctx, http.StatusInternalServerError, err.Error())
+		apihelper.AbortErrorHandleCustomMessage(ctx, err.ServiceCode, err.Message)
 		return
 	}
 	apihelper.SuccessfulHandle(ctx, nil)
@@ -79,10 +78,42 @@ func (o *OrganizationController) UpdateOrganization(ctx *gin.Context) {
 		email = fmt.Sprintf("%v", userEmail)
 	}
 	req.UpdatedBy = email
-	err = o.organizationService.UpdateOrganization(uint(orgID), uint(userID), &req)
+	errR := o.organizationService.UpdateOrganization(uint(orgID), uint(userID), &req)
+	if errR != nil {
+		logger.ErrorCtx(ctx, tag+"Failed to create sample with error: %v", errR)
+		apihelper.AbortErrorHandleCustomMessage(ctx, errR.ServiceCode, errR.Message)
+		return
+	}
+	apihelper.SuccessfulHandle(ctx, nil)
+	return
+}
+func (o *OrganizationController) UpdateOrganizationStatus(ctx *gin.Context) {
+	tag := "[UpdateOrganizationStatus] "
+	orgIDRaw := ctx.Param("id")
+	orgID, err := strconv.ParseUint(orgIDRaw, 10, 32)
 	if err != nil {
-		logger.ErrorCtx(ctx, tag+"Failed to create sample with error: %v", err)
-		apihelper.AbortErrorHandleCustomMessage(ctx, http.StatusInternalServerError, err.Error())
+		logger.Error(ctx, tag, err)
+		apihelper.AbortErrorHandle(ctx, common.ErrCodeInvalidRequest)
+		return
+	}
+	var req request.UpdateOrganizationStatusRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		logger.Error(ctx, tag, err)
+		apihelper.AbortErrorHandle(ctx, common.ErrCodeInvalidRequest)
+		return
+	}
+	userIDRaw, _ := ctx.Get("user_id")
+	userID, _ := strconv.ParseUint(userIDRaw.(string), 10, 32)
+	email := ""
+	userEmail, ok := ctx.Get("email")
+	if ok {
+		email = fmt.Sprintf("%v", userEmail)
+	}
+	req.UpdatedBy = email
+	errR := o.organizationService.UpdateOrganizationStatus(uint(orgID), uint(userID), &req)
+	if errR != nil {
+		logger.ErrorCtx(ctx, tag+"Failed to create sample with error: %v", errR)
+		apihelper.AbortErrorHandleCustomMessage(ctx, errR.ServiceCode, errR.Message)
 		return
 	}
 	apihelper.SuccessfulHandle(ctx, nil)
@@ -100,10 +131,10 @@ func (o *OrganizationController) ViewOrganization(ctx *gin.Context) {
 	}
 	userIDRaw, _ := ctx.Get("user_id")
 	userID, _ := strconv.ParseUint(userIDRaw.(string), 10, 32)
-	res, err := o.organizationService.FindOrganizationByID(uint(orgID), uint(userID))
-	if err != nil {
-		logger.ErrorCtx(ctx, tag+"Failed to create sample with error: %v", err)
-		apihelper.AbortErrorHandleCustomMessage(ctx, http.StatusInternalServerError, err.Error())
+	res, errR := o.organizationService.FindOrganizationByID(uint(orgID), uint(userID))
+	if errR != nil {
+		logger.ErrorCtx(ctx, tag+"Failed to create sample with error: %v", errR)
+		apihelper.AbortErrorHandleCustomMessage(ctx, errR.ServiceCode, errR.Message)
 		return
 	}
 	apihelper.SuccessfulHandle(ctx, res)
@@ -127,16 +158,42 @@ func (o *OrganizationController) AddPeopleToOrganization(ctx *gin.Context) {
 		apihelper.AbortErrorHandle(ctx, common.ErrCodeInvalidRequest)
 		return
 	}
-	validEmails, errRes := o.organizationService.AddPeopleToOrganization(ctx, uint(orgID), uint(userID), req.Emails)
+	validEmails, errRes := o.organizationService.AddPeopleToOrganization(ctx, uint(orgID), uint(userID), &req)
 	if errRes != nil {
 		logger.Error(ctx, tag, err)
-		apihelper.AbortErrorHandle(ctx, errRes.ServiceCode)
+		apihelper.AbortErrorHandleCustomMessage(ctx, errRes.ServiceCode, errRes.Message)
 		return
 	}
 	res := map[string][]string{
 		"valid_email": validEmails,
 	}
 	apihelper.SuccessfulHandle(ctx, res)
+}
+
+func (o *OrganizationController) RemovePeopleFromOrganization(ctx *gin.Context) {
+	tag := "[RemovePeopleFromOrganization] "
+	orgIDRaw := ctx.Param("id")
+	orgID, err := strconv.ParseUint(orgIDRaw, 10, 32)
+	if err != nil {
+		logger.Error(ctx, tag, err)
+		apihelper.AbortErrorHandle(ctx, common.ErrCodeInvalidRequest)
+		return
+	}
+	userIDRaw, _ := ctx.Get("user_id")
+	userID, _ := strconv.ParseUint(userIDRaw.(string), 10, 32)
+	var req request.RemoveUserFromOrganizationRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		logger.Error(ctx, tag, err)
+		apihelper.AbortErrorHandle(ctx, common.ErrCodeInvalidRequest)
+		return
+	}
+	errRes := o.organizationService.RemoveUserFromOrganization(ctx, uint(orgID), uint(userID), &req)
+	if errRes != nil {
+		logger.Error(ctx, tag, err)
+		apihelper.AbortErrorHandleCustomMessage(ctx, errRes.ServiceCode, errRes.Message)
+		return
+	}
+	apihelper.SuccessfulHandle(ctx, nil)
 }
 
 func (o *OrganizationController) AcceptOrganizationInvitation(ctx *gin.Context) {
@@ -148,10 +205,69 @@ func (o *OrganizationController) AcceptOrganizationInvitation(ctx *gin.Context) 
 		apihelper.AbortErrorHandle(ctx, common.ErrCodeInvalidRequest)
 		return
 	}
-	userEmail := ctx.Param("userEmail")
-	if err := o.organizationService.AcceptOrganizationInvitation(uint(orgID), userEmail); err != nil {
+	deptIDRaw := ctx.Param("deptID")
+	deptID, err := strconv.ParseUint(deptIDRaw, 10, 32)
+	if err != nil {
 		logger.Error(ctx, tag, err)
-		apihelper.AbortErrorHandle(ctx, err.ServiceCode)
+		apihelper.AbortErrorHandle(ctx, common.ErrCodeInvalidRequest)
+		return
+	}
+	userEmail := ctx.Param("userEmail")
+	if err := o.organizationService.AcceptOrganizationInvitation(uint(orgID), uint(deptID), userEmail); err != nil {
+		logger.Error(ctx, tag, err)
+		apihelper.AbortErrorHandleCustomMessage(ctx, err.ServiceCode, err.Message)
+		return
+	}
+	apihelper.SuccessfulHandle(ctx, nil)
+}
+
+func (o *OrganizationController) AssignPeopleToManager(ctx *gin.Context) {
+	tag := "[AssignPeopleToManager] "
+	userIDRaw, _ := ctx.Get("user_id")
+	userID, _ := strconv.ParseUint(userIDRaw.(string), 10, 32)
+	orgIDRaw := ctx.Param("id")
+	orgID, err := strconv.ParseUint(orgIDRaw, 10, 32)
+	if err != nil {
+		logger.Error(ctx, tag, err)
+		apihelper.AbortErrorHandle(ctx, common.ErrCodeInvalidRequest)
+		return
+	}
+	var req request.AssignPeopleToManagerRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		logger.Error(ctx, tag, err)
+		apihelper.AbortErrorHandle(ctx, common.ErrCodeInvalidRequest)
+		return
+	}
+	errRes := o.organizationService.AssignPeopleTobeManager(ctx, uint(orgID), uint(userID), &req)
+	if errRes != nil {
+		logger.Error(ctx, tag, errRes)
+		apihelper.AbortErrorHandleCustomMessage(ctx, errRes.ServiceCode, errRes.Message)
+		return
+	}
+	apihelper.SuccessfulHandle(ctx, nil)
+}
+
+func (o *OrganizationController) RecallPeopleToManager(ctx *gin.Context) {
+	tag := "[RecallPeopleToManager] "
+	userIDRaw, _ := ctx.Get("user_id")
+	userID, _ := strconv.ParseUint(userIDRaw.(string), 10, 32)
+	orgIDRaw := ctx.Param("id")
+	orgID, err := strconv.ParseUint(orgIDRaw, 10, 32)
+	if err != nil {
+		logger.Error(ctx, tag, err)
+		apihelper.AbortErrorHandle(ctx, common.ErrCodeInvalidRequest)
+		return
+	}
+	var req request.RecallPeopleManagerRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		logger.Error(ctx, tag, err)
+		apihelper.AbortErrorHandle(ctx, common.ErrCodeInvalidRequest)
+		return
+	}
+	errRes := o.organizationService.RecallPeopleTobeManager(ctx, uint(orgID), uint(userID), &req)
+	if errRes != nil {
+		logger.Error(ctx, tag, errRes)
+		apihelper.AbortErrorHandleCustomMessage(ctx, errRes.ServiceCode, errRes.Message)
 		return
 	}
 	apihelper.SuccessfulHandle(ctx, nil)

@@ -50,6 +50,7 @@ type TokenConfig struct {
 }
 
 type EmailConfig struct {
+	Domain         string `envconfig:"GO_DOMAIN"`
 	AcceptURL      string `envconfig:"ACCEPT_URL"`
 	SenderEmail    string `envconfig:"SENDER_EMAIL"`
 	SenderPassword string `envconfig:"SENDER_PASSWORD"`
@@ -62,4 +63,8 @@ type ResetPasswordConfig struct {
 	ResetPasswordTokenTTL       int64  `envconfig:"RESET_PASSWORD_TOKEN_TTL"`
 	ResetPasswordSender         string `envconfig:"RESET_PASSWORD_SENDER"`
 	ResetPasswordSenderPassword string `envconfig:"RESET_PASSWORD_SENDER_PASSWORD"`
+}
+
+type VerifyEmailConfig struct {
+	LinkVerifyEmail string `envconfig:"LINK_VERIFY_EMAIL"`
 }

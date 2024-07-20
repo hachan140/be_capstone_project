@@ -18,8 +18,12 @@ type ResetPasswordInfo struct {
 	ResetLink string
 }
 
-func SendOrganizationInvitation(orgID uint, organizationName string, sender string, senderPassword string, receiver string) error {
-	joinLink := fmt.Sprintf("%s/accept/%d/user/%s", "http://34.143.155.117:8080", orgID, receiver)
+type VerifyEmail struct {
+	VerifyLink string
+}
+
+func SendOrganizationInvitation(domain string, orgID uint, organizationName string, sender string, senderPassword string, deptID uint, receiver string) error {
+	joinLink := fmt.Sprintf("%s?orgID=%d&deptID=%d&email=%s", "http://localhost:5173/accepted-join", orgID, deptID, receiver)
 	fmt.Println("joinLink: " + joinLink)
 	emailData := EmailData{
 		OrganizationName: organizationName,
@@ -73,6 +77,39 @@ func SendResetPasswordLink(resetPasswordLink, sender string, senderPassword stri
 	m.SetHeader("From", sender)
 	m.SetHeader("To", receiver)
 	m.SetHeader("Subject", "GENIFAST-SEARCH Reset Password")
+	m.SetBody("text/html", body.String())
+	d := gomail.NewDialer("smtp.gmail.com", 587, sender, senderPassword)
+	d.TLSConfig = &tls.Config{InsecureSkipVerify: true}
+	if err := d.DialAndSend(m); err != nil {
+		fmt.Println(err)
+		return err
+	}
+
+	fmt.Println("Email sent successfully!")
+	return nil
+}
+
+func SendVerifyEmailCreateAccount(verifyLink, sender string, senderPassword string, receiver string) error {
+	verifyLink = fmt.Sprintf("%s?email=%s", verifyLink, receiver)
+	verifyEmail := VerifyEmail{
+		VerifyLink: verifyLink,
+	}
+	htmlContent, err := ioutil.ReadFile("src/internal/core/email_template/verify_email.html")
+	if err != nil {
+		return err
+	}
+	t, err := template.New("email").Parse(string(htmlContent))
+	if err != nil {
+		return err
+	}
+	var body bytes.Buffer
+	if err := t.Execute(&body, verifyEmail); err != nil {
+		return err
+	}
+	m := gomail.NewMessage()
+	m.SetHeader("From", sender)
+	m.SetHeader("To", receiver)
+	m.SetHeader("Subject", "GENIFAST-SEARCH Verify Email")
 	m.SetBody("text/html", body.String())
 	d := gomail.NewDialer("smtp.gmail.com", 587, sender, senderPassword)
 	d.TLSConfig = &tls.Config{InsecureSkipVerify: true}

@@ -10,6 +10,7 @@ type CreateCategoryRequest struct {
 	Description    string `json:"description"`
 	ParentID       uint   `json:"parent_id"`
 	OrganizationID uint   `json:"organization_id"`
+	DepartmentID   uint   `json:"department_id"`
 	CreatedBy      string `json:"created_by"`
 }
 
@@ -35,10 +36,15 @@ func (c *UpdateCategoryRequest) Validate() error {
 	if *c.Name == "" {
 		return errors.New(common.ErrMessageInvalidCategoryName)
 	}
-	if c.Status != nil {
-		if *c.Status != 0 || *c.Status != 1 {
-			return errors.New(common.ErrMessageInvalidStatus)
-		}
-	}
 	return nil
+}
+
+type UpdateCategoryStatusRequest struct {
+	Status    *int   `json:"status"`
+	UpdatedBy string `json:"updated_by"`
+}
+
+type UpdateDepartmentStatusRequest struct {
+	Status    *int   `json:"status"`
+	UpdatedBy string `json:"updated_by"`
 }

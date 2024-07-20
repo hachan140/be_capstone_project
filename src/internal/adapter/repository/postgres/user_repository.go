@@ -14,9 +14,13 @@ type IUserRepository interface {
 	UpdateUserOrganizationRole(userID uint, orgID uint, isOrgManager bool) error
 	UpdateUserSocial(userID uint) error
 	FindUsersInOrganization(emails []*string) ([]string, error)
-	FindUsersNotInOrganization(emails []*string) ([]string, error)
-	AddPeopleOrganization(userID uint, orgID uint) error
+	FindUsersNotInOrganization(emails []*string) ([]*model.User, error)
+	AddPeopleOrganization(userID uint, orgID uint, deptID uint) error
 	ResetPassword(userID uint, password string) error
+	UpdateUserStatus(userID uint, status int) error
+	FindUserInOrganization(email string, orgID uint) (*model.User, error)
+	UpdateUserRoleManager(userID uint, isManager bool) error
+	RemoveUserFromOrganization(userID uint) error
 }
 
 type UserRepository struct {
@@ -71,13 +75,13 @@ func (u *UserRepository) FindUsersInOrganization(emails []*string) ([]string, er
 	return emailExisted, nil
 }
 
-func (u *UserRepository) FindUsersNotInOrganization(emails []*string) ([]string, error) {
-	var emailNotExisted []string
-	result := u.storage.Raw("select email from users u where email in ? and organization_id = 0", emails).Scan(&emailNotExisted)
+func (u *UserRepository) FindUsersNotInOrganization(emails []*string) ([]*model.User, error) {
+	var users []*model.User
+	result := u.storage.Raw("select * from users u where email in ? and organization_id = 0 and status = 1", emails).Scan(&users)
 	if result.Error != nil {
 		return nil, result.Error
 	}
-	return emailNotExisted, nil
+	return users, nil
 
 }
 
@@ -98,8 +102,8 @@ func (u *UserRepository) UpdateUserSocial(userID uint) error {
 
 }
 
-func (u *UserRepository) AddPeopleOrganization(userID uint, orgID uint) error {
-	err := u.storage.Exec("update users set organization_id = ? where id = ?", orgID, userID).Error
+func (u *UserRepository) AddPeopleOrganization(userID uint, orgID uint, deptID uint) error {
+	err := u.storage.Exec("update users set organization_id = ?, dept_id = ? where id = ?", orgID, deptID, userID).Error
 	if err != nil {
 		return err
 	}
@@ -108,6 +112,40 @@ func (u *UserRepository) AddPeopleOrganization(userID uint, orgID uint) error {
 
 func (u *UserRepository) ResetPassword(userID uint, password string) error {
 	err := u.storage.Exec("update users set password = ? where id = ?", password, userID).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (u *UserRepository) UpdateUserStatus(userID uint, status int) error {
+	err := u.storage.Exec("update users set status = ? where id = ?", status, userID).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (u *UserRepository) FindUserInOrganization(email string, orgID uint) (*model.User, error) {
+	var user *model.User
+	result := u.storage.Raw("select * from users u where email = ? and organization_id = ?", email, orgID).Scan(&user)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return user, nil
+
+}
+
+func (u *UserRepository) UpdateUserRoleManager(userID uint, isManager bool) error {
+	err := u.storage.Exec("update users set is_organization_manager = ? where id = ?", isManager, userID).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (u *UserRepository) RemoveUserFromOrganization(userID uint) error {
+	err := u.storage.Exec("update users set is_organization_manager = false, organization_id = 0, dept_id = 0, is_dept_manager = false where id = ?", userID).Error
 	if err != nil {
 		return err
 	}

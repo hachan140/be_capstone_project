@@ -30,10 +30,15 @@ func RegisterGinRouters(
 	{
 		authGroup.POST("/login", authController.Login)
 		authGroup.POST("/signup", authController.Signup)
+		authGroup.GET("/email/verify", authController.VerifyEmail)
 		authGroup.POST("/social-login", authController.SocialLogin)
 		authGroup.POST("/refresh-token", authController.RefreshToken)
 		authGroup.POST("/reset-password/request", authController.ResetPasswordRequest)
-		authGroup.Use(middleware.ValidateToken(publicKeyResetPassword)).POST("/reset-password", authController.ResetPassword)
+	}
+	resetPassword := in.Group("/reset-password")
+	resetPassword.Use(middleware.ValidateToken(publicKeyResetPassword))
+	{
+		resetPassword.POST("", authController.ResetPassword)
 	}
 
 	organizationGroup := in.Group("/organization")
@@ -42,11 +47,15 @@ func RegisterGinRouters(
 		organizationGroup.POST("", organizationController.CreateOrganization)
 		organizationGroup.GET("/:id", organizationController.ViewOrganization)
 		organizationGroup.PATCH("/:id", organizationController.UpdateOrganization)
+		organizationGroup.PATCH("/:id/status", organizationController.UpdateOrganizationStatus)
 		organizationGroup.POST("/:id/add-people", organizationController.AddPeopleToOrganization)
+		organizationGroup.POST(":id/remove-people", organizationController.RemovePeopleFromOrganization)
+		organizationGroup.POST("/:id/assign-manager", organizationController.AssignPeopleToManager)
+		organizationGroup.POST("/:id/recall-manager", organizationController.RecallPeopleToManager)
 	}
 	acceptInvitation := in.Group("/accept")
 	{
-		acceptInvitation.GET("/:orgID/user/:userEmail", organizationController.AcceptOrganizationInvitation)
+		acceptInvitation.GET("/:orgID/dept/:deptID/user/:userEmail", organizationController.AcceptOrganizationInvitation)
 	}
 
 	categoryGroup := in.Group("/category")
@@ -55,13 +64,24 @@ func RegisterGinRouters(
 		categoryGroup.POST("", categoryController.CreateCategory)
 		categoryGroup.GET("/:id", categoryController.ViewCategoryByID)
 		categoryGroup.PATCH("/:id", categoryController.UpdateCategory)
-		categoryGroup.GET("/organization/:id", categoryController.ViewListCategoryByOrganization)
+		categoryGroup.PATCH("/:id/status", categoryController.UpdateCategoryStatus)
+		//categoryGroup.GET("/organization/:id", categoryController.ViewListCategoryByOrganization)
 	}
 
+	departmentGroup := in.Group("/department")
+	departmentGroup.Use(middleware.ValidateToken(publicKey))
+	{
+		departmentGroup.GET("/:id/category/by-name", categoryController.ViewCategoryByNameLike)
+		departmentGroup.GET("/:id/category", categoryController.ViewListCategoryByDepartment)
+		departmentGroup.PATCH("/:id/status", categoryController.UpdateDepartmentStatus)
+	}
 	documentGroup := in.Group("/document")
 	documentGroup.Use(middleware.ValidateToken(publicKey))
 	{
 		documentGroup.GET("", hyperDocumentController.FilterHyperDocument)
+		documentGroup.POST("/search/and-or-not", hyperDocumentController.SearchDocumentAndOrNot)
+		documentGroup.POST("/search/keyword", hyperDocumentController.GetSearchHistoryKeywords)
+		documentGroup.POST("/search-history", hyperDocumentController.SaveSearchHistory)
 	}
 	group := in.Group("/test")
 	{

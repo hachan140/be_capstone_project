@@ -107,11 +107,12 @@ const (
 	ErrCodeRefreshTokenNotFound      = 400013
 
 	//organization
-	ErrCodeOrganizationExisted            = 400014
-	ErrCodeInvalidOrganizationName        = 400015
-	ErrCodeOrganizationNotExist           = 400016
-	ErrCodeCannotAccessToOrganization     = 400017
-	ErrCodeUserAlreadyInOtherOrganization = 400018
+	ErrCodeOrganizationExisted                  = 400014
+	ErrCodeInvalidOrganizationName              = 400015
+	ErrCodeOrganizationNotExist                 = 400016
+	ErrCodeCannotAccessToOrganization           = 400017
+	ErrCodeUserAlreadyInOtherOrganization       = 400018
+	ErrCodeUserAlreadyRequestCreateOrganization = 400019
 
 	//category
 	ErrCodeCategoryNotFound          = 400019
@@ -119,6 +120,13 @@ const (
 	ErrCodeInvalidCategoryName       = 400021
 	ErrCodeInvalidStatus             = 400022
 	ErrCodeUserDoesNotHavePermission = 400023
+
+	//document
+	ErrCodeDocumentNotFound = 400100
+
+	//user
+	ErrCodeUserNotInOrganization = 400200
+	ErrCodeUserIsInactive        = 400201
 )
 
 // Error code 401XXX
@@ -202,6 +210,18 @@ var errorResponseMap = map[int]map[ResponseLanguage]ErrorResponse{
 			HTTPCode:    http.StatusBadRequest,
 			ServiceCode: ErrCodeInternalError,
 			Message:     "Everything is fine except here, let's take a tour before trying again!",
+		},
+	},
+	ErrCodeUserAlreadyRequestCreateOrganization: {
+		Vietnamese: {
+			HTTPCode:    http.StatusBadRequest,
+			ServiceCode: ErrCodeUserAlreadyRequestCreateOrganization,
+			Message:     "User đã gửi yêu cầu tạo tổ chức",
+		},
+		English: {
+			HTTPCode:    http.StatusBadRequest,
+			ServiceCode: ErrCodeUserAlreadyRequestCreateOrganization,
+			Message:     "User has already create organization request",
 		},
 	},
 }

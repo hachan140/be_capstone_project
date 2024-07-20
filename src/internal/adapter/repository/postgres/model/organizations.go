@@ -7,6 +7,8 @@ type Organization struct {
 	Name        string
 	Description string
 	Status      int
+	LimitData   int64
+	DataUsed    int64
 	CreatedAt   time.Time
 	CreatedBy   string
 	UpdatedAt   time.Time
