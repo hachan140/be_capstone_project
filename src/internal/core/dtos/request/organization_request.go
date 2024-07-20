@@ -6,9 +6,10 @@ import (
 )
 
 type CreateOrganizationRequest struct {
-	Name        string
-	Description string
-	CreatedBy   string
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	CreatedBy   string `json:"created_by"`
+	IsOpenai    bool   `json:"is_openai"`
 }
 
 func (o *CreateOrganizationRequest) Validate() error {

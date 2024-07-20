@@ -11,6 +11,7 @@ func OrganizationModelToDTO(orgModel *model.Organization) *dtos.Organization {
 		Name:        orgModel.Name,
 		Description: orgModel.Description,
 		Status:      orgModel.Status,
+		IsOpenai:    orgModel.IsOpenai,
 		CreatedAt:   orgModel.CreatedAt,
 		CreatedBy:   orgModel.CreatedBy,
 		UpdatedAt:   orgModel.UpdatedAt,

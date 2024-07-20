@@ -7,6 +7,7 @@ type Organization struct {
 	Name        string    `json:"name"`
 	Description string    `json:"description"`
 	Status      int       `json:"status"`
+	IsOpenai    bool      `json:"is_openai"`
 	CreatedAt   time.Time `json:"created_at"`
 	CreatedBy   string    `json:"created_by"`
 	UpdatedAt   time.Time `json:"updated_at"`

@@ -69,6 +69,7 @@ func BootstrapAndRun() {
 	documentRepository := postgres.NewDocumentRepository(postgresClient)
 	privateDocumentRepository := postgres.NewPrivateDocumentRepository(postgresClient)
 	searchHistoryRepository := postgres.NewSearchHistoryRepository(postgresClient)
+	productRepository := postgres.NewProductRepository(postgresClient)
 
 	// Service layer
 	sampleService := services.NewSampleService(sampleRepository)
@@ -77,6 +78,7 @@ func BootstrapAndRun() {
 	categoryService := services.NewCategoryService(categoryRepository, userRepository, documentRepository)
 	hyperDocumentService := services.NewHyperDocumentService(documentRepository)
 	searchService := services.NewSearchService(privateDocumentRepository, documentRepository, userRepository, searchHistoryRepository)
+	productService := services.NewProductService(productRepository, userRepository)
 
 	// Controller layer
 	sampleController := controller.NewSampleController(sampleService)
@@ -84,6 +86,7 @@ func BootstrapAndRun() {
 	organizationController := controller.NewOrganizationController(organizationService)
 	categoryController := controller.NewCategoryController(categoryService)
 	hyperDocumentController := controller.NewHyperDocumentController(hyperDocumentService, searchService)
+	productController := controller.NewProductController(productService)
 
 	engine := gin.New()
 	//Register middleware and router
@@ -104,7 +107,7 @@ func BootstrapAndRun() {
 	configCors.MaxAge = 12 * time.Hour
 	engine.Use(cors.New(configCors))
 
-	router.RegisterGinRouters(engine, &sampleController, &authController, &organizationController, &categoryController, &hyperDocumentController)
+	router.RegisterGinRouters(engine, &sampleController, &authController, &organizationController, &categoryController, &hyperDocumentController, &productController)
 
 	srv := webserver_http.NewHttpServer(engine, cfg)
 

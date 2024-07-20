@@ -127,6 +127,9 @@ const (
 	//user
 	ErrCodeUserNotInOrganization = 400200
 	ErrCodeUserIsInactive        = 400201
+
+	//product
+	ErrCodeProductNotExist = 400300
 )
 
 // Error code 401XXX

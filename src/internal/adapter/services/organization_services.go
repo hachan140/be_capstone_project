@@ -98,6 +98,7 @@ func (o *OrganizationService) CreateOrganization(userId uint, req *request.Creat
 	orgModel := &model.Organization{
 		Name:        req.Name,
 		Description: req.Description,
+		IsOpenai:    req.IsOpenai,
 		CreatedAt:   time.Now(),
 		CreatedBy:   req.CreatedBy,
 		Status:      0,

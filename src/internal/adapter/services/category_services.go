@@ -42,7 +42,7 @@ func (c *CategoryService) CreateCategory(ctx context.Context, userID uint, req *
 			Message:     err.Error(),
 		}
 	}
-	isDeptManager, _, errC := c.CheckUserRoleInOrganization(req.OrganizationID, user.ID, req.DepartmentID)
+	isDeptManager, isOrgManager, errC := c.CheckUserRoleInOrganization(req.OrganizationID, user.ID, req.DepartmentID)
 	if errC != nil {
 		return &common.ErrorCodeMessage{
 			HTTPCode:    http.StatusInternalServerError,
@@ -50,7 +50,7 @@ func (c *CategoryService) CreateCategory(ctx context.Context, userID uint, req *
 			Message:     errC.Message,
 		}
 	}
-	if !isDeptManager {
+	if !isDeptManager || !isOrgManager {
 		return &common.ErrorCodeMessage{
 			HTTPCode:    http.StatusBadRequest,
 			ServiceCode: common.ErrCodeCannotAccessToOrganization,
@@ -373,7 +373,7 @@ func (c *CategoryService) CheckUserRoleInOrganization(orgID uint, userID uint, d
 func (c *CategoryService) buildUpdateCategory(existedCategory *model2.Category, req *request.UpdateCategoryRequest) *model2.Category {
 	var category model2.Category
 	if req == nil {
-		return nil
+		return existedCategory
 	}
 	if req.Name != nil {
 		category.Name = *req.Name

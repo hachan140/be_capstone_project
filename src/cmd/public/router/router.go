@@ -16,6 +16,7 @@ func RegisterGinRouters(
 	organizationController *controller.OrganizationController,
 	categoryController *controller.CategoryController,
 	hyperDocumentController *controller.HyperDocumentController,
+	productController *controller.ProductController,
 ) {
 	publicKey := os.Getenv("ACCESS_TOKEN_PUBLIC_KEY")
 	publicKeyResetPassword := os.Getenv("RESET_PASSWORD_PUBLIC_KEY")
@@ -82,6 +83,16 @@ func RegisterGinRouters(
 		documentGroup.POST("/search/and-or-not", hyperDocumentController.SearchDocumentAndOrNot)
 		documentGroup.POST("/search/keyword", hyperDocumentController.GetSearchHistoryKeywords)
 		documentGroup.POST("/search-history", hyperDocumentController.SaveSearchHistory)
+	}
+
+	productGroup := in.Group("/product")
+	productGroup.Use(middleware.ValidateToken(publicKey))
+	{
+		productGroup.POST("", productController.CreateProduct)
+		productGroup.GET("", productController.ViewListProduct)
+		productGroup.GET("/:id", productController.GetProductByID)
+		productGroup.GET("/by-name/:name", productController.SearchProductByName)
+		productGroup.PATCH("/:id", productController.UpdateProduct)
 	}
 	group := in.Group("/test")
 	{

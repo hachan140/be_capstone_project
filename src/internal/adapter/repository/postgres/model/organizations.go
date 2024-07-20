@@ -9,6 +9,7 @@ type Organization struct {
 	Status      int
 	LimitData   int64
 	DataUsed    int64
+	IsOpenai    bool
 	CreatedAt   time.Time
 	CreatedBy   string
 	UpdatedAt   time.Time

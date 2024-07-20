@@ -34,4 +34,7 @@ const (
 	//user
 	ErrMessageUserNotInOrganization = "Người dùng không thuộc tổ chức"
 	ErrMessageUserIsInactive        = "Người dùng không hoạt động"
+
+	//product
+	ErrMessageProductNotExist = "Sản phẩm không tồn tại"
 )
