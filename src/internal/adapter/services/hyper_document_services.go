@@ -26,7 +26,7 @@ func (h *HyperDocumentService) FilterHyperDocument(ctx context.Context, req requ
 	if req.Page <= 0 {
 		req.Page = 1
 	}
-	if req.PageSize > 100 {
+	if req.PageSize > 100 || req.PageSize <= 0 {
 		req.PageSize = 100
 	}
 	queryDocuments, paramDocuments := h.BuildQueryFilterDocument(req)
@@ -52,8 +52,8 @@ func (h *HyperDocumentService) BuildQueryFilterDocument(req request.HyperDocumen
 	query := ` WHERE 1 = 1 `
 	var params []interface{}
 	if req.Title != "" {
-		query += ` AND documents.title like '%?%'`
-		params = append(params, req.Title)
+		query += ` AND documents.title like ?`
+		params = append(params, "%"+req.Title+"%")
 	}
 	if req.Type != "" {
 		query += ` AND documents.type = ?`
