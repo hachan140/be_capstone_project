@@ -101,13 +101,20 @@ func (c *CategoryService) ListCategories(ctx context.Context, depID uint, userID
 			Message:     err.Error(),
 		}
 	}
-	if !user.IsOrganizationManager {
-		if user.OrganizationID != 0 && user.DeptID != depID {
-			return nil, &common.ErrorCodeMessage{
-				HTTPCode:    http.StatusBadRequest,
-				ServiceCode: common.ErrCodeUserAlreadyInOtherOrganization,
-				Message:     common.ErrMessageUserAlreadyInOtherOrganization,
-			}
+
+	dept, err := c.categoryRepo.FindDepartmentByID(depID)
+	if err != nil {
+		return nil, &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusInternalServerError,
+			ServiceCode: common.ErrCodeInternalError,
+			Message:     err.Error(),
+		}
+	}
+	if user.OrganizationID != dept.OrganizationID {
+		return nil, &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusBadRequest,
+			ServiceCode: common.ErrCodeUserAlreadyInOtherOrganization,
+			Message:     common.ErrMessageUserAlreadyInOtherOrganization,
 		}
 	}
 
