@@ -125,8 +125,9 @@ const (
 	ErrCodeDocumentNotFound = 400100
 
 	//user
-	ErrCodeUserNotInOrganization = 400200
-	ErrCodeUserIsInactive        = 400201
+	ErrCodeUserNotInOrganization  = 400200
+	ErrCodeUserIsInactive         = 400201
+	ErrCodeUserHaveNotVerifyEmail = 400202
 
 	//product
 	ErrCodeProductNotExist = 400300

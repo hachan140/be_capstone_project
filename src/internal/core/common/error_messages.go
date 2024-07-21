@@ -32,8 +32,9 @@ const (
 	ErrMessageDocumentNotFound = "Không tìm thấy tài liệu"
 
 	//user
-	ErrMessageUserNotInOrganization = "Người dùng không thuộc tổ chức"
-	ErrMessageUserIsInactive        = "Người dùng không hoạt động"
+	ErrMessageUserNotInOrganization  = "Người dùng không thuộc tổ chức"
+	ErrMessageUserIsInactive         = "Người dùng không hoạt động"
+	ErrMessageUserHaveNotVerifyEmail = "Tài khoản chưa được xác minh"
 
 	//product
 	ErrMessageProductNotExist = "Sản phẩm không tồn tại"

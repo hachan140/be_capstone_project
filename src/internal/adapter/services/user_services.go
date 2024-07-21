@@ -102,8 +102,8 @@ func (u *UserService) LoginByUserEmail(ctx context.Context, req *request.LoginRe
 	if userModel.Status != 1 {
 		return nil, &common.ErrorCodeMessage{
 			HTTPCode:    http.StatusBadRequest,
-			ServiceCode: common.ErrCodeInvalidUser,
-			Message:     common.ErrMessageInvalidUser,
+			ServiceCode: common.ErrCodeUserHaveNotVerifyEmail,
+			Message:     common.ErrMessageUserHaveNotVerifyEmail,
 		}
 	}
 	if err := utils.CheckHash(userModel.Password, req.Password); err != nil {
