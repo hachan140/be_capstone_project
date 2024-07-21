@@ -50,6 +50,20 @@ func (o *OrganizationController) CreateOrganization(ctx *gin.Context) {
 	return
 }
 
+func (o *OrganizationController) CheckUserAlreadyRequestCreateOrganization(ctx *gin.Context) {
+	tag := "[CheckUserAlreadyRequestCreateOrganization] "
+	userIDRaw, _ := ctx.Get("user_id")
+	userID, _ := strconv.ParseUint(userIDRaw.(string), 10, 32)
+	res, err := o.organizationService.CheckUserAlreadyRequestCreateOrganization(uint(userID))
+	if err != nil {
+		logger.ErrorCtx(ctx, tag+"Failed to create sample with error: %v", err)
+		apihelper.AbortErrorHandleCustomMessage(ctx, err.ServiceCode, err.Message)
+		return
+	}
+	apihelper.SuccessfulHandle(ctx, res)
+	return
+}
+
 func (o *OrganizationController) UpdateOrganization(ctx *gin.Context) {
 	tag := "[UpdateOrganizationController] "
 	orgIDRaw := ctx.Param("id")

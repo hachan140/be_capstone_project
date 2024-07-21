@@ -53,6 +53,7 @@ func RegisterGinRouters(
 		organizationGroup.POST(":id/remove-people", organizationController.RemovePeopleFromOrganization)
 		organizationGroup.POST("/:id/assign-manager", organizationController.AssignPeopleToManager)
 		organizationGroup.POST("/:id/recall-manager", organizationController.RecallPeopleToManager)
+		organizationGroup.GET("/check-user-organization", organizationController.CheckUserAlreadyRequestCreateOrganization)
 	}
 	acceptInvitation := in.Group("/accept")
 	{

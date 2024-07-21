@@ -28,6 +28,7 @@ type IOrganizationService interface {
 	AcceptOrganizationInvitation(orgID uint, deptID uint, userEmail string) *common.ErrorCodeMessage
 	AssignPeopleTobeManager(ctx context.Context, orgID uint, userID uint, req *request.AssignPeopleToManagerRequest) *common.ErrorCodeMessage
 	RecallPeopleTobeManager(ctx context.Context, orgID uint, userID uint, req *request.RecallPeopleManagerRequest) *common.ErrorCodeMessage
+	CheckUserAlreadyRequestCreateOrganization(userId uint) (bool, *common.ErrorCodeMessage)
 }
 
 type OrganizationService struct {
@@ -112,6 +113,40 @@ func (o *OrganizationService) CreateOrganization(userId uint, req *request.Creat
 		}
 	}
 	return nil
+}
+
+func (o *OrganizationService) CheckUserAlreadyRequestCreateOrganization(userId uint) (bool, *common.ErrorCodeMessage) {
+	user, err := o.userRepository.FinduserByID(userId)
+	if err != nil {
+		return false, &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusInternalServerError,
+			ServiceCode: common.ErrCodeInternalError,
+			Message:     err.Error(),
+		}
+	}
+	if user.OrganizationID != 0 {
+		return false, &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusBadRequest,
+			ServiceCode: common.ErrCodeUserAlreadyInOtherOrganization,
+			Message:     common.ErrMessageUserAlreadyInOtherOrganization,
+		}
+	}
+	orgByAuthor, err := o.organizationRepository.FindOrganizationByAuthor(user.Email)
+	if err != nil {
+		return false, &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusInternalServerError,
+			ServiceCode: common.ErrCodeInternalError,
+			Message:     err.Error(),
+		}
+	}
+	if orgByAuthor != nil && orgByAuthor.Status == 0 {
+		return true, &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusBadRequest,
+			ServiceCode: common.ErrCodeUserAlreadyRequestCreateOrganization,
+			Message:     common.ErrMessageUserAlreadyCreateOrganizationRequest,
+		}
+	}
+	return false, nil
 }
 
 func (o *OrganizationService) UpdateOrganization(orgID uint, userID uint, req *request.UpdateOrganizationRequest) *common.ErrorCodeMessage {
