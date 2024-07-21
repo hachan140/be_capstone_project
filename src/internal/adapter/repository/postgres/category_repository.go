@@ -13,7 +13,7 @@ type ICategoryRepository interface {
 	ListCategoryByDepartmentID(orgID uint) ([]*model.Category, error)
 	FindCategoryByID(catID uint) (*model.Category, error)
 	FindDepartmentByID(deptID uint) (*model.Department, error)
-	FindCategoryByName(name string) (*model.Category, error)
+	FindCategoryByName(name string, deptID uint) (*model.Category, error)
 	FindCategoryByNameLike(name string, deptID uint) ([]*model.Category, error)
 	UpdateCategoriesStatusByDepartmentID(deptID uint, status int) error
 	UpdateCategoriesStatusByOrganizationID(orgID uint, status int) error
@@ -130,9 +130,9 @@ func (c *CategoryRepository) FindDepartmentByID(deptID uint) (*model.Department,
 	return department, nil
 }
 
-func (c *CategoryRepository) FindCategoryByName(name string) (*model.Category, error) {
+func (c *CategoryRepository) FindCategoryByName(name string, deptID uint) (*model.Category, error) {
 	var category *model.Category
-	err := c.storage.Raw("select * from categories where name = ?", name).Scan(&category).Error
+	err := c.storage.Raw("select * from categories where name = ? and department_id = ?", name, deptID).Scan(&category).Error
 	if err != nil {
 		return nil, err
 	}

@@ -57,7 +57,7 @@ func (c *CategoryService) CreateCategory(ctx context.Context, userID uint, req *
 			Message:     common.ErrMessageCannotAccessToOrganization,
 		}
 	}
-	catExisted, err := c.categoryRepo.FindCategoryByName(req.Name)
+	catExisted, err := c.categoryRepo.FindCategoryByName(req.Name, req.DepartmentID)
 	if err != nil {
 		return &common.ErrorCodeMessage{
 			HTTPCode:    http.StatusInternalServerError,
@@ -221,7 +221,7 @@ func (c *CategoryService) UpdateCategoryByID(ctx context.Context, userID uint, c
 		}
 	}
 	if req.Name != nil {
-		categoryByName, err := c.categoryRepo.FindCategoryByName(*req.Name)
+		categoryByName, err := c.categoryRepo.FindCategoryByName(*req.Name, category.DepartmentID)
 		if err != nil {
 			return &common.ErrorCodeMessage{
 				HTTPCode:    http.StatusInternalServerError,
