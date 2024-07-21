@@ -7,20 +7,22 @@ import (
 
 func DocumentToHyperDocumentDTO(document *model.Document) *dtos.Document {
 	return &dtos.Document{
-		ID:          document.ID,
-		Title:       document.Title,
-		Description: document.Description,
-		Content:     document.Content,
-		CategoryID:  document.CategoryID,
-		TotalPage:   document.TotalPage,
-		Status:      document.Status,
-		Type:        document.Type,
-		FilePath:    document.FilePath,
-		FileID:      document.FileID,
-		Duration:    0,
-		CreatedAt:   document.CreatedAt,
-		CreatedBy:   document.CreatedBy,
-		UpdatedAt:   document.UpdatedAt,
+		ID:              document.ID,
+		Title:           document.Title,
+		Description:     document.Description,
+		Content:         document.Content,
+		CategoryID:      document.CategoryID,
+		TotalPage:       document.TotalPage,
+		Status:          document.Status,
+		Type:            document.Type,
+		FilePath:        document.FilePath,
+		FileID:          document.FileID,
+		Duration:        0,
+		StorageCapacity: document.StorageCapacity,
+		StorageUnit:     document.StorageUnit,
+		CreatedAt:       document.CreatedAt,
+		CreatedBy:       document.CreatedBy,
+		UpdatedAt:       document.UpdatedAt,
 	}
 }
 
