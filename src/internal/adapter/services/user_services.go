@@ -296,7 +296,7 @@ func (u *UserService) ResetPasswordRequest(ctx context.Context, req *request.Res
 			Message:     err.Error(),
 		}
 	}
-	resetPasswordLink := fmt.Sprintf("%s?token=%s", "http://34.143.211.213:5173/reset-password", token)
+	resetPasswordLink := fmt.Sprintf("%s?token=%s", "https://genifast.pro/reset-password", token)
 	err = utils.SendResetPasswordLink(resetPasswordLink, u.config.ResetPasswordConfig.ResetPasswordSender, u.config.ResetPasswordConfig.ResetPasswordSenderPassword, req.Email)
 	if err != nil {
 		return nil, &common.ErrorCodeMessage{
