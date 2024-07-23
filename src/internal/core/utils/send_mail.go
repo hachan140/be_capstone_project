@@ -23,7 +23,7 @@ type VerifyEmail struct {
 }
 
 func SendOrganizationInvitation(domain string, orgID uint, organizationName string, sender string, senderPassword string, deptID uint, receiver string) error {
-	joinLink := fmt.Sprintf("%s?orgID=%d&deptID=%d&email=%s", "http://localhost:5173/accepted-join", orgID, deptID, receiver)
+	joinLink := fmt.Sprintf("%s?orgID=%d&deptID=%d&email=%s", "http://34.143.211.213:5173/accepted-join", orgID, deptID, receiver)
 	fmt.Println("joinLink: " + joinLink)
 	emailData := EmailData{
 		OrganizationName: organizationName,
