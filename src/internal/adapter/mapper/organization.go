@@ -6,7 +6,7 @@ import (
 )
 
 func OrganizationModelToDTO(orgModel *model.Organization) *dtos.Organization {
-	percent := orgModel.DataUsed / orgModel.LimitData
+	percent := orgModel.DataUsed * 100 / orgModel.LimitData
 	return &dtos.Organization{
 		ID:              orgModel.ID,
 		Name:            orgModel.Name,
