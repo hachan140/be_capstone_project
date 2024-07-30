@@ -182,18 +182,39 @@ func (s *SearchService) SaveSearchHistory(req *request.SaveSearchHistoryRequest)
 	if req.Type == 2 {
 		req.UserID = 0
 	}
-	searchHistory := &model.SearchHistory{
-		UserID:    req.UserID,
-		Keywords:  req.Keyword,
-		CreatedAt: time.Now(),
-		Type:      req.Type,
-	}
-	if err := s.searchHistoryRepository.SaveSearchHistory(searchHistory); err != nil {
+	existed, err := s.searchHistoryRepository.GetExistedHistoryOfUser(req.UserID, strings.ToLower(req.Keyword))
+	if err != nil {
 		return &common.ErrorCodeMessage{
 			HTTPCode:    http.StatusInternalServerError,
 			ServiceCode: common.ErrCodeInternalError,
 			Message:     err.Error(),
 		}
 	}
+	if existed != nil {
+		err := s.searchHistoryRepository.UpdateExistedKeyword(existed.ID)
+		if err != nil {
+			return &common.ErrorCodeMessage{
+				HTTPCode:    http.StatusInternalServerError,
+				ServiceCode: common.ErrCodeInternalError,
+				Message:     err.Error(),
+			}
+		}
+	} else {
+		searchHistory := &model.SearchHistory{
+			UserID:    req.UserID,
+			Keywords:  req.Keyword,
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
+			Type:      req.Type,
+		}
+		if err := s.searchHistoryRepository.SaveSearchHistory(searchHistory); err != nil {
+			return &common.ErrorCodeMessage{
+				HTTPCode:    http.StatusInternalServerError,
+				ServiceCode: common.ErrCodeInternalError,
+				Message:     err.Error(),
+			}
+		}
+	}
+
 	return nil
 }

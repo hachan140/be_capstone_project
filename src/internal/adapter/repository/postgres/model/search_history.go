@@ -7,5 +7,6 @@ type SearchHistory struct {
 	UserID    uint
 	Keywords  string
 	CreatedAt time.Time
+	UpdatedAt time.Time
 	Type      int
 }

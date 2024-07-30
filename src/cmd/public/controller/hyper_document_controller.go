@@ -84,6 +84,11 @@ func (h *HyperDocumentController) SaveSearchHistory(ctx *gin.Context) {
 		apihelper.AbortErrorHandle(ctx, common.ErrCodeInvalidRequest)
 		return
 	}
+	if err := req.Validate(); err != nil {
+		logger.Error(ctx, tag, err)
+		apihelper.AbortErrorHandleCustomMessage(ctx, common.ErrCodeInvalidRequest, err.Error())
+		return
+	}
 	req.UserID = uint(userID)
 	err := h.searchService.SaveSearchHistory(&req)
 	if err != nil {

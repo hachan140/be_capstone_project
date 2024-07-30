@@ -67,7 +67,6 @@ func RegisterGinRouters(
 		categoryGroup.GET("/:id", categoryController.ViewCategoryByID)
 		categoryGroup.PATCH("/:id", categoryController.UpdateCategory)
 		categoryGroup.PATCH("/:id/status", categoryController.UpdateCategoryStatus)
-		//categoryGroup.GET("/organization/:id", categoryController.ViewListCategoryByOrganization)
 	}
 
 	departmentGroup := in.Group("/department")
