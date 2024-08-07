@@ -11,6 +11,7 @@ type IProductRepository interface {
 	GetProductsByName(name string) ([]*model.Product, error)
 	GetListProducts(limit int, offset int) ([]*model.Product, error)
 	UpdateProduct(product *model.Product) error
+	DeleteProduct(id uint) error
 }
 
 type ProductRepository struct {
@@ -58,6 +59,14 @@ func (p *ProductRepository) GetListProducts(limit int, offset int) ([]*model.Pro
 
 func (p *ProductRepository) UpdateProduct(product *model.Product) error {
 	err := p.storage.Model(product).Where("id = ?", product.ID).Updates(product).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (p *ProductRepository) DeleteProduct(id uint) error {
+	err := p.storage.Exec("delete from products where id = ?", id).Error
 	if err != nil {
 		return err
 	}

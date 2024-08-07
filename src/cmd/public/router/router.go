@@ -93,6 +93,7 @@ func RegisterGinRouters(
 		productGroup.GET("/:id", productController.GetProductByID)
 		productGroup.GET("/by-name/:name", productController.SearchProductByName)
 		productGroup.PATCH("/:id", productController.UpdateProduct)
+		productGroup.DELETE("/:id", productController.DeleteProduct)
 	}
 	group := in.Group("/test")
 	{

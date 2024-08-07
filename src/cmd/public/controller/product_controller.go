@@ -114,3 +114,24 @@ func (p *ProductController) ViewListProduct(ctx *gin.Context) {
 	apihelper.SuccessfulHandle(ctx, res)
 	return
 }
+
+func (p *ProductController) DeleteProduct(ctx *gin.Context) {
+	tag := "[DeleteProduct] "
+	prodIDRaw := ctx.Param("id")
+	prodID, err := strconv.ParseUint(prodIDRaw, 10, 32)
+	if err != nil {
+		logger.Error(ctx, tag, err)
+		apihelper.AbortErrorHandle(ctx, common.ErrCodeInvalidRequest)
+		return
+	}
+	userIDRaw, _ := ctx.Get("user_id")
+	userID, _ := strconv.ParseUint(userIDRaw.(string), 10, 32)
+	errR := p.productService.DeleteProduct(ctx, uint(userID), uint(prodID))
+	if errR != nil {
+		logger.ErrorCtx(ctx, tag+"Failed to delete product with error: %v", errR)
+		apihelper.AbortErrorHandleCustomMessage(ctx, errR.ServiceCode, errR.Message)
+		return
+	}
+	apihelper.SuccessfulHandle(ctx, nil)
+	return
+}

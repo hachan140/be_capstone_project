@@ -19,6 +19,7 @@ type IProductService interface {
 	GetProductsByName(ctx context.Context, name string) ([]*dtos.Product, *common.ErrorCodeMessage)
 	GetListProducts(ctx context.Context, page int, pageSize int) ([]*dtos.Product, *common.ErrorCodeMessage)
 	UpdateProduct(ctx context.Context, userID uint, productID uint, req *request.UpdateProductRequest) *common.ErrorCodeMessage
+	DeleteProduct(ctx context.Context, userID uint, productID uint) *common.ErrorCodeMessage
 }
 
 type ProductService struct {
@@ -127,6 +128,39 @@ func (p *ProductService) UpdateProduct(ctx context.Context, userID uint, product
 	}
 	product := p.buildUpdateProductQuery(productExisted, req)
 	if err := p.productRepository.UpdateProduct(product); err != nil {
+		return &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusInternalServerError,
+			ServiceCode: common.ErrCodeInternalError,
+			Message:     err.Error(),
+		}
+	}
+	return nil
+}
+
+func (p *ProductService) DeleteProduct(ctx context.Context, userID uint, productID uint) *common.ErrorCodeMessage {
+	if !p.isAdmin(userID) {
+		return &common.ErrorCodeMessage{
+			HTTPCode:    http.DefaultMaxHeaderBytes,
+			ServiceCode: common.ErrCodeUserDoesNotHavePermission,
+			Message:     common.ErrMessageUserDoesNotHavePermission,
+		}
+	}
+	productExisted, err := p.productRepository.GetProductByID(productID)
+	if err != nil {
+		return &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusInternalServerError,
+			ServiceCode: common.ErrCodeInternalError,
+			Message:     err.Error(),
+		}
+	}
+	if productExisted == nil {
+		return &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusBadRequest,
+			ServiceCode: common.ErrCodeProductNotExist,
+			Message:     common.ErrMessageProductNotExist,
+		}
+	}
+	if err := p.productRepository.DeleteProduct(productID); err != nil {
 		return &common.ErrorCodeMessage{
 			HTTPCode:    http.StatusInternalServerError,
 			ServiceCode: common.ErrCodeInternalError,
