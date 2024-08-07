@@ -151,6 +151,11 @@ func (p *ProductService) buildUpdateProductQuery(existed *model.Product, req *re
 	} else {
 		productToUpdate.Description = existed.Description
 	}
+	if req.Quantity != nil {
+		productToUpdate.Quantity = *req.Quantity
+	} else {
+		productToUpdate.Quantity = existed.Quantity
+	}
 	productToUpdate.ID = existed.ID
 	productToUpdate.UpdatedAt = time.Now()
 	return &productToUpdate
