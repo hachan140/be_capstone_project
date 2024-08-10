@@ -234,28 +234,44 @@ func (o *OrganizationService) UpdateOrganizationStatus(orgID uint, userID uint, 
 		}
 	}
 
-	if err := o.organizationRepository.UpdateOrganizationStatus(orgID, *req.Status); err != nil {
+	oStatus, deptStatus, cStatus, docStatus := 0, 0, 0, 0
+
+	if *req.Status == 1 {
+		oStatus = 1
+		deptStatus = 1
+		cStatus = 1
+		docStatus = 1
+	}
+
+	if *req.Status == 3 {
+		oStatus = 3
+		deptStatus = 2
+		cStatus = 2
+		docStatus = 2
+	}
+
+	if err := o.organizationRepository.UpdateOrganizationStatus(orgID, oStatus); err != nil {
 		return &common.ErrorCodeMessage{
 			HTTPCode:    http.StatusInternalServerError,
 			ServiceCode: common.ErrCodeInternalError,
 			Message:     err.Error(),
 		}
 	}
-	if err := o.categoryRepository.UpdateCategoriesStatusByOrganizationID(orgID, *req.Status); err != nil {
+	if err := o.categoryRepository.UpdateCategoriesStatusByOrganizationID(orgID, cStatus); err != nil {
 		return &common.ErrorCodeMessage{
 			HTTPCode:    http.StatusInternalServerError,
 			ServiceCode: common.ErrCodeInternalError,
 			Message:     err.Error(),
 		}
 	}
-	if err := o.categoryRepository.UpdateDepartmentsStatusByOrganizationID(orgID, *req.Status); err != nil {
+	if err := o.categoryRepository.UpdateDepartmentsStatusByOrganizationID(orgID, deptStatus); err != nil {
 		return &common.ErrorCodeMessage{
 			HTTPCode:    http.StatusInternalServerError,
 			ServiceCode: common.ErrCodeInternalError,
 			Message:     err.Error(),
 		}
 	}
-	if err := o.documentRepository.UpdateDocumentStatusByOrganizationID(orgID, *req.Status); err != nil {
+	if err := o.documentRepository.UpdateDocumentStatusByOrganizationID(orgID, docStatus); err != nil {
 		return &common.ErrorCodeMessage{
 			HTTPCode:    http.StatusInternalServerError,
 			ServiceCode: common.ErrCodeInternalError,
