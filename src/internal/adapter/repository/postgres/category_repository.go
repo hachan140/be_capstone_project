@@ -96,7 +96,7 @@ func (c *CategoryRepository) UpdateDepartmentsStatusByOrganizationID(orgID uint,
 
 func (c *CategoryRepository) ListCategoryByDepartment(orgID uint, limit int, offset int) ([]*model.Category, error) {
 	var categories []*model.Category
-	err := c.storage.Raw("select * from categories where department_id = ? order by created_at desc limit ? offset ?", orgID, limit, offset).Scan(&categories).Error
+	err := c.storage.Raw("select * from categories where department_id = ? and status = 1 order by created_at desc limit ? offset ?", orgID, limit, offset).Scan(&categories).Error
 	if err != nil {
 		return nil, err
 	}
@@ -114,7 +114,7 @@ func (c *CategoryRepository) ListCategoryByDepartmentID(orgID uint) ([]*model.Ca
 
 func (c *CategoryRepository) FindCategoryByID(catID uint) (*model.Category, error) {
 	var category *model.Category
-	err := c.storage.Raw("select * from categories where id = ?", catID).Scan(&category).Error
+	err := c.storage.Raw("select * from categories where id = ? and status = 1", catID).Scan(&category).Error
 	if err != nil {
 		return nil, err
 	}

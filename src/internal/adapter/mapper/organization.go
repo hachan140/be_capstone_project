@@ -14,6 +14,8 @@ func OrganizationModelToDTO(orgModel *model.Organization) *dtos.Organization {
 		Status:          orgModel.Status,
 		LimitData:       orgModel.LimitData,
 		DataUsed:        orgModel.DataUsed,
+		LimitToken:      orgModel.LimitToken,
+		TokenUsed:       orgModel.TokenUsed,
 		PercentDataUsed: percent,
 		IsOpenai:        orgModel.IsOpenai,
 		CreatedAt:       orgModel.CreatedAt,

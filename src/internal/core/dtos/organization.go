@@ -10,6 +10,8 @@ type Organization struct {
 	IsOpenai        bool      `json:"is_openai"`
 	LimitData       int64     `json:"limit_data"`
 	DataUsed        int64     `json:"data_used"`
+	LimitToken      int64     `json:"limit_token"`
+	TokenUsed       int64     `json:"token_used"`
 	PercentDataUsed int64     `json:"percent_data_used"`
 	CreatedAt       time.Time `json:"created_at"`
 	CreatedBy       string    `json:"created_by"`
