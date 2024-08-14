@@ -34,7 +34,7 @@ func (o *OrganizationRepository) CreateOrganization(org *model.Organization) err
 
 func (o *OrganizationRepository) FindOrganizationByID(ID uint) (*model.Organization, error) {
 	var org *model.Organization
-	err := o.storage.Raw("select * from organizations where id = ? and status = 1", ID).Scan(&org).Error
+	err := o.storage.Raw("select * from organizations where id = ?", ID).Scan(&org).Error
 	if err != nil {
 		return nil, err
 	}

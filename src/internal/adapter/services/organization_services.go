@@ -158,7 +158,7 @@ func (o *OrganizationService) UpdateOrganization(orgID uint, userID uint, req *r
 			Message:     err.Error(),
 		}
 	}
-	if org == nil {
+	if org == nil || org.Status != 1 {
 		return &common.ErrorCodeMessage{
 			HTTPCode:    http.StatusBadRequest,
 			ServiceCode: common.ErrCodeOrganizationNotExist,
@@ -316,7 +316,7 @@ func (o *OrganizationService) FindOrganizationByID(orgID uint, userID uint) (*dt
 		}
 	}
 	org, err := o.organizationRepository.FindOrganizationByID(orgID)
-	if err != nil {
+	if err != nil || org.Status != 1 {
 		return nil, &common.ErrorCodeMessage{
 			HTTPCode:    http.StatusInternalServerError,
 			ServiceCode: common.ErrCodeInternalError,
@@ -343,7 +343,7 @@ func (o *OrganizationService) AddPeopleToOrganization(ctx context.Context, orgID
 			Message:     err.Error(),
 		}
 	}
-	if org == nil {
+	if org == nil || org.Status != 1 {
 		return nil, &common.ErrorCodeMessage{
 			HTTPCode:    http.StatusBadRequest,
 			ServiceCode: common.ErrCodeOrganizationNotExist,
@@ -398,7 +398,7 @@ func (o *OrganizationService) RemoveUserFromOrganization(ctx context.Context, or
 			Message:     err.Error(),
 		}
 	}
-	if org == nil {
+	if org == nil || org.Status != 1 {
 		return &common.ErrorCodeMessage{
 			HTTPCode:    http.StatusBadRequest,
 			ServiceCode: common.ErrCodeOrganizationNotExist,
@@ -432,7 +432,7 @@ func (o *OrganizationService) AssignPeopleTobeManager(ctx context.Context, orgID
 			Message:     err.Error(),
 		}
 	}
-	if org == nil {
+	if org == nil || org.Status != 1 {
 		return &common.ErrorCodeMessage{
 			HTTPCode:    http.StatusBadRequest,
 			ServiceCode: common.ErrCodeOrganizationNotExist,
@@ -489,7 +489,7 @@ func (o *OrganizationService) RecallPeopleTobeManager(ctx context.Context, orgID
 			Message:     err.Error(),
 		}
 	}
-	if org == nil {
+	if org == nil || org.Status != 1 {
 		return &common.ErrorCodeMessage{
 			HTTPCode:    http.StatusBadRequest,
 			ServiceCode: common.ErrCodeOrganizationNotExist,
@@ -553,7 +553,7 @@ func (o *OrganizationService) AcceptOrganizationInvitation(orgID uint, deptID ui
 			Message:     err.Error(),
 		}
 	}
-	if org == nil {
+	if org == nil || org.Status != 1 {
 		return &common.ErrorCodeMessage{
 			HTTPCode:    http.StatusBadRequest,
 			ServiceCode: common.ErrCodeOrganizationNotExist,
