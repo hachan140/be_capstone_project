@@ -225,8 +225,8 @@ func (o *OrganizationService) UpdateOrganizationStatus(orgID uint, userID uint, 
 			Message:     common.ErrMessageOrganizationNotExist,
 		}
 	}
-	_, isOrganizationManager, _ := o.CheckUserRoleInOrganization(orgID, userID)
-	if !isOrganizationManager {
+	isAdmin, isOrganizationManager, _ := o.CheckUserRoleInOrganization(orgID, userID)
+	if !isOrganizationManager && !isAdmin {
 		return &common.ErrorCodeMessage{
 			HTTPCode:    http.StatusBadRequest,
 			ServiceCode: common.ErrCodeCannotAccessToOrganization,
