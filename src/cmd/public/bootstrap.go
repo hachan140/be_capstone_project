@@ -76,7 +76,7 @@ func BootstrapAndRun() {
 	userService := services.NewUserService(userRepository, refreshTokenRepository, *cfg)
 	organizationService := services.NewOrganizationService(organizationRepositoy, userRepository, cfg.EmailConfig, categoryRepository, documentRepository)
 	categoryService := services.NewCategoryService(categoryRepository, userRepository, documentRepository)
-	hyperDocumentService := services.NewHyperDocumentService(documentRepository)
+	hyperDocumentService := services.NewHyperDocumentService(documentRepository, userRepository, privateDocumentRepository)
 	searchService := services.NewSearchService(privateDocumentRepository, documentRepository, userRepository, searchHistoryRepository)
 	productService := services.NewProductService(productRepository, userRepository)
 

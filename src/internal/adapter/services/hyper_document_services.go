@@ -3,6 +3,7 @@ package services
 import (
 	"be-capstone-project/src/internal/adapter/mapper"
 	"be-capstone-project/src/internal/adapter/repository/postgres"
+	"be-capstone-project/src/internal/adapter/repository/postgres/model"
 	"be-capstone-project/src/internal/core/common"
 	"be-capstone-project/src/internal/core/dtos"
 	"be-capstone-project/src/internal/core/dtos/request"
@@ -12,18 +13,35 @@ import (
 )
 
 type IHyperDocumentService interface {
-	FilterHyperDocument(ctx context.Context, req request.HyperDocumentFilterParam) ([]*dtos.Document, *common.ErrorCodeMessage)
+	FilterHyperDocument(ctx context.Context, req request.HyperDocumentFilterParam, userID uint) ([]*dtos.Document, *common.ErrorCodeMessage)
 }
 
 type HyperDocumentService struct {
 	documentRepository postgres.IDocumentRepository
+	userRepository     postgres.IUserRepository
+	privateDocRepo     postgres.IPrivateDocumentRepository
 }
 
-func NewHyperDocumentService(documentRepository postgres.IDocumentRepository) IHyperDocumentService {
-	return &HyperDocumentService{documentRepository: documentRepository}
+func NewHyperDocumentService(documentRepository postgres.IDocumentRepository, userRepository postgres.IUserRepository, privateDoc postgres.IPrivateDocumentRepository) IHyperDocumentService {
+	return &HyperDocumentService{documentRepository: documentRepository, userRepository: userRepository, privateDocRepo: privateDoc}
 }
 
-func (h *HyperDocumentService) FilterHyperDocument(ctx context.Context, req request.HyperDocumentFilterParam) ([]*dtos.Document, *common.ErrorCodeMessage) {
+func (h *HyperDocumentService) FilterHyperDocument(ctx context.Context, req request.HyperDocumentFilterParam, userID uint) ([]*dtos.Document, *common.ErrorCodeMessage) {
+	user, err := h.userRepository.FinduserByID(userID)
+	if err != nil {
+		return nil, &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusInternalServerError,
+			ServiceCode: common.ErrCodeInternalError,
+			Message:     err.Error(),
+		}
+	}
+	if user == nil {
+		return nil, &common.ErrorCodeMessage{
+			HTTPCode:    http.StatusBadRequest,
+			ServiceCode: common.ErrCodeUserNotFound,
+			Message:     common.ErrMessageInvalidUser,
+		}
+	}
 	if req.Page <= 0 {
 		req.Page = 1
 	}
@@ -39,14 +57,8 @@ func (h *HyperDocumentService) FilterHyperDocument(ctx context.Context, req requ
 			Message:     err.Error(),
 		}
 	}
-	hyperDocuments := make([]*dtos.Document, 0)
-	if documents != nil {
-		for _, d := range documents {
-			dDTO := mapper.DocumentToHyperDocumentDTO(d)
-			hyperDocuments = append(hyperDocuments, dDTO)
-		}
-	}
-	return hyperDocuments, nil
+	documents = h.filterDocumentAccessType(userID, user.OrganizationID, user.DeptID, documents)
+	return mapper.DocumentsToHyperDocumentDTOs(documents), nil
 }
 
 func (h *HyperDocumentService) BuildQueryFilterDocument(req request.HyperDocumentFilterParam) (string, []interface{}) {
@@ -73,4 +85,42 @@ func (h *HyperDocumentService) BuildQueryFilterDocument(req request.HyperDocumen
 		params = append(params, req.CreatedToDate)
 	}
 	return query, params
+}
+
+func (h *HyperDocumentService) filterDocumentAccessType(userID uint, orgUserID uint, userDeptID uint, documents []*model.Document) []*model.Document {
+
+	docRes := make([]*model.Document, 0)
+	for _, d := range documents {
+		if d.AccessType == 1 {
+			docRes = append(docRes, d)
+			continue
+		}
+		if d.OrganizationID == orgUserID {
+			switch d.AccessType {
+			case 2:
+				if d.OrganizationID != 0 {
+					docRes = append(docRes, d)
+				}
+				break
+			case 3:
+				if d.OrganizationID != 0 && d.DeptID != 0 && d.DeptID == userDeptID {
+					docRes = append(docRes, d)
+				}
+				break
+			case 4:
+				doc, err := h.privateDocRepo.GetPrivateDocument(userID, d.ID)
+				if err != nil {
+					return nil
+				}
+				if doc != nil {
+					docRes = append(docRes, d)
+				}
+				break
+			default:
+				return nil
+			}
+		}
+		continue
+	}
+	return docRes
 }
