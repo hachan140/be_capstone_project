@@ -11,6 +11,7 @@ func DocumentToHyperDocumentDTO(document *model.Document) *dtos.Document {
 		Title:           document.Title,
 		Description:     document.Description,
 		Content:         document.Content,
+		AccessType:      document.AccessType,
 		CategoryID:      document.CategoryID,
 		TotalPage:       document.TotalPage,
 		Status:          document.Status,
