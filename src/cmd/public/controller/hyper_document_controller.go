@@ -23,12 +23,6 @@ func (h *HyperDocumentController) FilterHyperDocument(ctx *gin.Context) {
 	tag := "[HyperDocumentController] "
 	userIDRaw, _ := ctx.Get("user_id")
 	userID, _ := strconv.ParseUint(userIDRaw.(string), 10, 32)
-	var req request.SearchAndOrNotRequest
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		logger.Error(ctx, tag, err)
-		apihelper.AbortErrorHandle(ctx, common.ErrCodeInvalidRequest)
-		return
-	}
 	documentFilterParams := request.HyperDocumentFilterParam{}
 	if err := ctx.ShouldBindQuery(&documentFilterParams); err != nil {
 		logger.Error(ctx, tag, err)

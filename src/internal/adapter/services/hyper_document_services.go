@@ -57,7 +57,7 @@ func (h *HyperDocumentService) FilterHyperDocument(ctx context.Context, req requ
 			Message:     err.Error(),
 		}
 	}
-	documents = h.filterDocumentAccessType(userID, user.OrganizationID, user.DeptID, documents)
+	documents = h.filterDocumentAccessType(userID, user.IsOrganizationManager, user.OrganizationID, user.DeptID, documents)
 	return mapper.DocumentsToHyperDocumentDTOs(documents), nil
 }
 
@@ -87,7 +87,7 @@ func (h *HyperDocumentService) BuildQueryFilterDocument(req request.HyperDocumen
 	return query, params
 }
 
-func (h *HyperDocumentService) filterDocumentAccessType(userID uint, orgUserID uint, userDeptID uint, documents []*model.Document) []*model.Document {
+func (h *HyperDocumentService) filterDocumentAccessType(userID uint, isOrgManager bool, orgUserID uint, userDeptID uint, documents []*model.Document) []*model.Document {
 
 	docRes := make([]*model.Document, 0)
 	for _, d := range documents {
@@ -103,7 +103,7 @@ func (h *HyperDocumentService) filterDocumentAccessType(userID uint, orgUserID u
 				}
 				break
 			case 3:
-				if d.OrganizationID != 0 && d.DeptID != 0 && d.DeptID == userDeptID {
+				if isOrgManager || (d.OrganizationID != 0 && d.DeptID != 0 && d.DeptID == userDeptID) {
 					docRes = append(docRes, d)
 				}
 				break
