@@ -314,8 +314,8 @@ func (c *CategoryService) UpdateDepartmentStatus(ctx context.Context, userID uin
 			Message:     common.ErrMessageCategoryNotFound,
 		}
 	}
-	isDeptManager, _, _ := c.CheckUserRoleInOrganization(deparment.OrganizationID, userID, deptID)
-	if !isDeptManager {
+	isDeptManager, isOrgManager, _ := c.CheckUserRoleInOrganization(deparment.OrganizationID, userID, deptID)
+	if !isDeptManager && !isOrgManager {
 		return &common.ErrorCodeMessage{
 			HTTPCode:    http.StatusBadRequest,
 			ServiceCode: common.ErrCodeCannotAccessToOrganization,
