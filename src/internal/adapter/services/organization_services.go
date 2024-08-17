@@ -316,7 +316,7 @@ func (o *OrganizationService) FindOrganizationByID(orgID uint, userID uint) (*dt
 		}
 	}
 	org, err := o.organizationRepository.FindOrganizationByID(orgID)
-	if err != nil || org.Status != 1 {
+	if err != nil {
 		return nil, &common.ErrorCodeMessage{
 			HTTPCode:    http.StatusInternalServerError,
 			ServiceCode: common.ErrCodeInternalError,
