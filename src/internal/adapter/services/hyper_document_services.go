@@ -57,7 +57,7 @@ func (h *HyperDocumentService) FilterHyperDocument(ctx context.Context, req requ
 			Message:     err.Error(),
 		}
 	}
-	documents = h.filterDocumentAccessType(userID, user.IsOrganizationManager, user.OrganizationID, user.DeptID, documents)
+	documents = h.filterDocumentAccessType(userID, user.Email, user.IsOrganizationManager, user.OrganizationID, user.DeptID, documents)
 	return mapper.DocumentsToHyperDocumentDTOs(documents), nil
 }
 
@@ -87,7 +87,7 @@ func (h *HyperDocumentService) BuildQueryFilterDocument(req request.HyperDocumen
 	return query, params
 }
 
-func (h *HyperDocumentService) filterDocumentAccessType(userID uint, isOrgManager bool, orgUserID uint, userDeptID uint, documents []*model.Document) []*model.Document {
+func (h *HyperDocumentService) filterDocumentAccessType(userID uint, userEmail string, isOrgManager bool, orgUserID uint, userDeptID uint, documents []*model.Document) []*model.Document {
 
 	docRes := make([]*model.Document, 0)
 	for _, d := range documents {
@@ -108,12 +108,16 @@ func (h *HyperDocumentService) filterDocumentAccessType(userID uint, isOrgManage
 				}
 				break
 			case 4:
-				doc, err := h.privateDocRepo.GetPrivateDocument(userID, d.ID)
-				if err != nil {
-					return nil
-				}
-				if doc != nil {
+				if d.CreatedBy == userEmail {
 					docRes = append(docRes, d)
+				} else {
+					doc, err := h.privateDocRepo.GetPrivateDocument(userID, d.ID)
+					if err != nil {
+						return nil
+					}
+					if doc != nil {
+						docRes = append(docRes, d)
+					}
 				}
 				break
 			default:
