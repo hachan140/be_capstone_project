@@ -201,6 +201,11 @@ func (o *OrganizationController) RemovePeopleFromOrganization(ctx *gin.Context) 
 		apihelper.AbortErrorHandle(ctx, common.ErrCodeInvalidRequest)
 		return
 	}
+	if err := req.Validate(); err != nil {
+		logger.Error(ctx, tag, err)
+		apihelper.AbortErrorHandle(ctx, common.ErrCodeInvalidRequest)
+		return
+	}
 	errRes := o.organizationService.RemoveUserFromOrganization(ctx, uint(orgID), uint(userID), &req)
 	if errRes != nil {
 		logger.Error(ctx, tag, err)

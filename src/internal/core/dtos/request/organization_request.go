@@ -46,6 +46,12 @@ type RemoveUserFromOrganizationRequest struct {
 	UserID uint `json:"user_id"`
 }
 
+func (r *RemoveUserFromOrganizationRequest) Validate() error {
+	if r.UserID == 0 {
+		return errors.New("Invalid user_id")
+	}
+}
+
 type UserInfo struct {
 	Email        string `json:"email"`
 	DepartmentID uint   `json:"department_id"`
