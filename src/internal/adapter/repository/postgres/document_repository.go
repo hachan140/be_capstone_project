@@ -31,7 +31,7 @@ func (d *DocumentRepository) FilterDocument(ctx context.Context, query string, p
 	var documents []*model.Document
 	sqlQuery := `(SELECT distinct documents.* FROM documents`
 	sqlQuery += query
-	sqlQuery += ` ORDER BY documents.id DESC `
+	sqlQuery += ` AND documents.status = 1 ORDER BY documents.id DESC `
 	sqlQuery += " LIMIT ?"
 	params = append(params, req.PageSize)
 	sqlQuery += " OFFSET ?)"
