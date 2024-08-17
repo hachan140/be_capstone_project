@@ -132,7 +132,7 @@ func (c *CategoryRepository) FindDepartmentByID(deptID uint) (*model.Department,
 
 func (c *CategoryRepository) FindCategoryByName(name string, deptID uint) (*model.Category, error) {
 	var category *model.Category
-	err := c.storage.Raw("select * from categories where name = ? and department_id = ?", name, deptID).Scan(&category).Error
+	err := c.storage.Raw("select * from categories where name = ? and department_id = ? and status = 1", name, deptID).Scan(&category).Error
 	if err != nil {
 		return nil, err
 	}
