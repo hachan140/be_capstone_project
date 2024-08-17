@@ -50,6 +50,7 @@ func (r *RemoveUserFromOrganizationRequest) Validate() error {
 	if r.UserID == 0 {
 		return errors.New("Invalid user_id")
 	}
+	return nil
 }
 
 type UserInfo struct {
