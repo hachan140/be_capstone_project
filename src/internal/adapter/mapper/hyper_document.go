@@ -34,20 +34,22 @@ func DocumentsToHyperDocumentDTOs(document []*model.Document) []*dtos.Document {
 	documentRes := make([]*dtos.Document, 0)
 	for _, document := range document {
 		dRes := &dtos.Document{
-			ID:          document.ID,
-			Title:       document.Title,
-			Description: document.Description,
-			Content:     document.Content,
-			CategoryID:  document.CategoryID,
-			TotalPage:   document.TotalPage,
-			Status:      document.Status,
-			Type:        document.Type,
-			FilePath:    document.FilePath,
-			FileID:      document.FileID,
-			Duration:    0,
-			CreatedAt:   document.CreatedAt,
-			CreatedBy:   document.CreatedBy,
-			UpdatedAt:   document.UpdatedAt,
+			ID:              document.ID,
+			Title:           document.Title,
+			Description:     document.Description,
+			Content:         document.Content,
+			CategoryID:      document.CategoryID,
+			TotalPage:       document.TotalPage,
+			Status:          document.Status,
+			Type:            document.Type,
+			FilePath:        document.FilePath,
+			FileID:          document.FileID,
+			Duration:        document.Duration,
+			AccessType:      document.AccessType,
+			StorageCapacity: document.StorageCapacity,
+			CreatedAt:       document.CreatedAt,
+			CreatedBy:       document.CreatedBy,
+			UpdatedAt:       document.UpdatedAt,
 		}
 		documentRes = append(documentRes, dRes)
 	}
