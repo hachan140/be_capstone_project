@@ -10,6 +10,7 @@ import (
 	"context"
 	"net/http"
 	"strings"
+	"time"
 )
 
 type IHyperDocumentService interface {
@@ -82,7 +83,8 @@ func (h *HyperDocumentService) BuildQueryFilterDocument(req request.HyperDocumen
 	}
 	if req.CreatedToDate.String() != "0001-01-01 00:00:00 +0000 UTC" {
 		query += " AND documents.created_at <= ?"
-		params = append(params, req.CreatedToDate)
+		createdToDate := req.CreatedToDate.Add(23*time.Hour + 59*time.Minute + 59*time.Second)
+		params = append(params, createdToDate)
 	}
 	return query, params
 }
