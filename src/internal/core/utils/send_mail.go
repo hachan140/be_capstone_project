@@ -44,10 +44,10 @@ func SendOrganizationInvitation(domain string, orgID uint, organizationName stri
 	m := gomail.NewMessage()
 	m.SetHeader("From", sender)
 	m.SetHeader("To", receiver)
-	m.SetHeader("Subject", "GENIFAST-SEARCH Invitation")
+	m.SetHeader("Subject", "GENIFAST Invitation")
 	m.SetBody("text/html", body.String())
 	d := gomail.NewDialer("smtp.gmail.com", 587, sender, senderPassword)
-	d.TLSConfig = &tls.Config{InsecureSkipVerify: true}
+	d.TLSConfig = &tls.Config{}
 	if err := d.DialAndSend(m); err != nil {
 		fmt.Println(err)
 		return err
@@ -76,10 +76,10 @@ func SendResetPasswordLink(resetPasswordLink, sender string, senderPassword stri
 	m := gomail.NewMessage()
 	m.SetHeader("From", sender)
 	m.SetHeader("To", receiver)
-	m.SetHeader("Subject", "GENIFAST-SEARCH Reset Password")
+	m.SetHeader("Subject", "GENIFAST Reset Password")
 	m.SetBody("text/html", body.String())
 	d := gomail.NewDialer("smtp.gmail.com", 587, sender, senderPassword)
-	d.TLSConfig = &tls.Config{InsecureSkipVerify: true}
+	d.TLSConfig = &tls.Config{}
 	if err := d.DialAndSend(m); err != nil {
 		fmt.Println(err)
 		return err
@@ -109,10 +109,10 @@ func SendVerifyEmailCreateAccount(verifyLink, sender string, senderPassword stri
 	m := gomail.NewMessage()
 	m.SetHeader("From", sender)
 	m.SetHeader("To", receiver)
-	m.SetHeader("Subject", "GENIFAST-SEARCH Verify Email")
+	m.SetHeader("Subject", "GENIFAST Verify Email")
 	m.SetBody("text/html", body.String())
 	d := gomail.NewDialer("smtp.gmail.com", 587, sender, senderPassword)
-	d.TLSConfig = &tls.Config{InsecureSkipVerify: true}
+	d.TLSConfig = &tls.Config{}
 	if err := d.DialAndSend(m); err != nil {
 		fmt.Println(err)
 		return err
